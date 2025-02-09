@@ -8,6 +8,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,13 +130,6 @@ public class Theloop implements ModInitializer {
                 // set time of day to start of the loop
                 serverWorld.setTimeOfDay(timeOfDay);
 
-                // Broadcast status to operators
-                server.getPlayerManager().getPlayerList().forEach(player -> {
-                    if (player.hasPermissionLevel(2)) {
-                        player.sendMessage(Text.literal("Loop iteration " + loopIteration + " completed"));
-                    }
-                });
-
                 // Restart playback commands
                 executeCommand("mocap playback stop_all");
                 executeCommand("mocap playback start .main_scene");
@@ -200,13 +194,16 @@ public class Theloop implements ModInitializer {
     }
 
     private boolean recordingFileExists(String recordingName) {
-        // Construct the directory path using the system's file separator for cross-platform compatibility.
-        File recordingDir = new File("world" + File.separator + "mocap_files" + File.separator + "recordings");
-        // The expected file name has the .mcmocap_rec extension.
-        File file = new File(recordingDir, recordingName.toLowerCase() + ".mcmocap_rec");
-        boolean exists = file.exists();
+        // Get the world folder path and resolve it properly
+        Path worldFolder = server.getSavePath(WorldSavePath.ROOT);
+
+        // Build the complete path for the recording directory using the absolute world path
+        Path recordingDir = worldFolder.resolve("mocap_files").resolve("recordings");
+        Path recordingFile = recordingDir.resolve(recordingName.toLowerCase() + ".mcmocap_rec");
+
+        boolean exists = recordingFile.toFile().exists();
         if (!exists) {
-            LOGGER.error("Expected recording file does not exist: {}", file.getAbsolutePath());
+            LOGGER.error("Expected recording file does not exist: {}", recordingFile.toAbsolutePath());
         }
         return exists;
     }
