@@ -4,23 +4,20 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Theloop implements ModInitializer {
+public class TheLoop implements ModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("theloop");
     private Commands commands;
     private static MinecraftServer server;
@@ -30,26 +27,21 @@ public class Theloop implements ModInitializer {
     public int loopIteration;
     public int looplength;
     public long timeOfDay;
-    private Timer recordingTimer;
     public boolean isLooping;
+    public int maxLoops;
+    private Timer recordingTimer;
     private List<String> recordingPlayers; // Add this field
 
     // The configuration object loaded from disk
     public TheLoopConfig config;
+    // Get the world folder path for config/recording loading
+    private Path worldFolder;
 
 
     @Override
     public void onInitialize() {
         LOGGER.info("Initializing TheLoop mod");
         recordingPlayers = new ArrayList<>(); // Initialize the list
-
-        // Load configuration from the config folder provided by FabricLoader
-        Path configDir = FabricLoader.getInstance().getConfigDir();
-        config = TheLoopConfig.load(configDir);
-        loopIteration = config.loopIteration;
-        looplength = config.loopLength;
-        isLooping = config.isLooping;
-        timeOfDay = config.timeOfDay;
 
         // Register commands
         commands = new Commands(this);
@@ -59,16 +51,33 @@ public class Theloop implements ModInitializer {
 
         // Register server started event
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            Theloop.server = server;
+            // Load configuration from the config folder provided by FabricLoader
+            worldFolder = server.getSavePath(WorldSavePath.ROOT);
+            // Path configDir = FabricLoader.getInstance().getConfigDir();
+            config = TheLoopConfig.load(worldFolder);
+            loopIteration = config.loopIteration;
+            looplength = config.loopLength;
+            isLooping = config.isLooping;
+            timeOfDay = config.timeOfDay;
+
+            TheLoop.server = server;
             this.serverWorld = server.getOverworld();
             executeCommand("mocap settings recording record_player_death false");
             executeCommand("mocap settings recording track_entities @items");
-            executeCommand("mocap scenes add main_scene");
+            executeCommand("mocap scenes add loop_scene");
             if (config.isLooping) {
                 LOGGER.info("Loop was active in config, automatically restarting loop.");
                 // Reset the in-memory flag so that startLoop() does not return early.
                 isLooping = false;
                 startLoop();
+            }
+        });
+
+        // stop the loop
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            if (isLooping) {
+                stopLoop();
+                config.isLooping = true;
             }
         });
 
@@ -87,11 +96,12 @@ public class Theloop implements ModInitializer {
             String playerName = player.getName().getString();
             recordingPlayers.remove(playerName); // Remove from recording list
             if (isLooping) {
-                String recordingName = playerName + "_" + loopIteration + "_" + System.currentTimeMillis();
+                LOGGER.debug("Saving recording for Disconnecting player: {}", playerName);
+                String recordingName = playerName + "_" + System.currentTimeMillis();
                 executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
                 executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
                 if (recordingFileExists(recordingName)) {
-                    executeCommand(String.format("mocap scenes add_to main_scene %s", recordingName.toLowerCase()));
+                    executeCommand(String.format("mocap scenes add_to loop_scene %s", recordingName.toLowerCase()));
                 }
             }
         });
@@ -132,7 +142,7 @@ public class Theloop implements ModInitializer {
 
                 // Restart playback commands
                 executeCommand("mocap playback stop_all");
-                executeCommand("mocap playback start .main_scene");
+                executeCommand("mocap playback start .loop_scene");
 
                 // Increment and update loop iteration in the config file
                 loopIteration++;
@@ -153,23 +163,24 @@ public class Theloop implements ModInitializer {
     public void saveRecordings() {
         // Stop and save recordings for each player
         for (String playerName : recordingPlayers) {
-            String recordingName = playerName + "_" + loopIteration + "_" + System.currentTimeMillis();
+            String recordingName = playerName + "_" + System.currentTimeMillis();
 
             LOGGER.debug("Processing recording for player: {}", playerName);
             executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
             executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
             if (recordingFileExists(recordingName)) {
-                executeCommand(String.format("mocap scenes add_to main_scene %s", recordingName.toLowerCase()));
+                executeCommand(String.format("mocap scenes add_to loop_scene %s", recordingName.toLowerCase()));
             }
         }
     }
 
-    public void stopRecordingLoop() {
+    public void stopLoop() {
         if (isLooping) {
             LOGGER.info("Stopping loop");
             isLooping = false;
             config.isLooping = false;
             saveRecordings();
+            executeCommand("mocap playback stop_all");
             LOGGER.debug("Loop stopped!");
             if (recordingTimer != null) {
                 recordingTimer.cancel();
@@ -194,9 +205,6 @@ public class Theloop implements ModInitializer {
     }
 
     private boolean recordingFileExists(String recordingName) {
-        // Get the world folder path and resolve it properly
-        Path worldFolder = server.getSavePath(WorldSavePath.ROOT);
-
         // Build the complete path for the recording directory using the absolute world path
         Path recordingDir = worldFolder.resolve("mocap_files").resolve("recordings");
         Path recordingFile = recordingDir.resolve(recordingName.toLowerCase() + ".mcmocap_rec");

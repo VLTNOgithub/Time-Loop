@@ -13,7 +13,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.vltno.theloop.Theloop"
+			"com.vltno.theloop.TheLoop"
 		]
 	},
 	"depends": {

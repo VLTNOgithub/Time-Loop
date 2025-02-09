@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 
 public class Commands {
     private static final Logger LOGGER = LoggerFactory.getLogger("theloop");
-    private final Theloop mod;
+    private final TheLoop mod;
 
-    public Commands(Theloop mod) {
+    public Commands(TheLoop mod) {
         this.mod = mod;
     }
 
@@ -36,7 +36,7 @@ public class Commands {
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
                             if (mod.isLooping) {
-                                mod.stopRecordingLoop();
+                                mod.stopLoop();
                                 context.getSource().sendMessage(Text.literal("Loop stopped"));
                                 LOGGER.info("loop stopped");
                                 return 1;
@@ -73,7 +73,7 @@ public class Commands {
                 .then(CommandManager.literal("reset")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            mod.stopRecordingLoop();
+                            mod.stopLoop();
                             mod.timeOfDay = 0;
                             mod.config.timeOfDay = 0;
                             mod.executeCommand("mocap playback stop_all");
