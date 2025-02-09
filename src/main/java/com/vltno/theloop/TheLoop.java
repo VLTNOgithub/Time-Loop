@@ -66,7 +66,7 @@ public class TheLoop implements ModInitializer {
             executeCommand(String.format("mocap recording stop %s", playerName));
             boolean saved = executeCommand(String.format("mocap recording save %s", recordingName.toLowerCase()));
             if (saved) {
-                executeCommand(String.format("mocap scenes add_to main_scene %s", recordingName.toLowerCase()));
+                executeCommand(String.format("mocap scenes addTo main_scene %s", recordingName.toLowerCase()));
             }
         });
 
