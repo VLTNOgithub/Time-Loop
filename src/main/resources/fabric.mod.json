@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "the-loop",
+	"version": "${version}",
+	"name": "The Loop",
+	"description": "A set of commands that 'loops' time by using the Motion Capture Mod. Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi. Fixed by VLTNO",
+	"authors": [
+		"Luigi",
+		"VLTNO"
+	],
+	"license": "CC0-1.0",
+	"icon": "assets/the-loop/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.vltno.theloop.TheLoop"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*",
+		"mocap": "*"
+	}
+}
