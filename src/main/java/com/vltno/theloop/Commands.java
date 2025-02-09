@@ -60,15 +60,28 @@ public class Commands {
                 .then(CommandManager.literal("setlength")
                         .requires(source -> source.hasPermissionLevel(2))
                         .then(CommandManager.argument("value", IntegerArgumentType.integer(10000))
-                                .executes(context -> {
-                                    int newLength = IntegerArgumentType.getInteger(context, "value");
-                                    mod.looplength = newLength;
-                                    mod.config.loopLength = newLength;
-                                    mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ms"));
-                                    LOGGER.info("Loop length set to {} ms", newLength);
-                                    return 1;
-                                })))
+                        .executes(context -> {
+                            int newLength = IntegerArgumentType.getInteger(context, "value");
+                            mod.loopLength = newLength;
+                            mod.config.loopLength = newLength;
+                            mod.config.save();
+                            context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ms"));
+                            LOGGER.info("Loop length set to {} ms", newLength);
+                            return 1;
+                        })))
+
+                .then(CommandManager.literal("maxloops")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .then(CommandManager.argument("value", IntegerArgumentType.integer(0))
+                        .executes(context -> {
+                            int maxLoops = IntegerArgumentType.getInteger(context, "value");
+                            mod.maxLoops = maxLoops;
+                            mod.config.maxLoops = maxLoops;
+                            mod.config.save();
+                            context.getSource().sendMessage(Text.literal("Max Loops set to " + maxLoops));
+                            LOGGER.info("Max Loops set to {}", maxLoops);
+                            return 1;
+                        })))
 
                 .then(CommandManager.literal("reset")
                         .requires(source -> source.hasPermissionLevel(2))

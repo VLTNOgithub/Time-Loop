@@ -25,7 +25,7 @@ public class TheLoop implements ModInitializer {
 
     // These fields will be initialized from the configuration file.
     public int loopIteration;
-    public int looplength;
+    public int loopLength;
     public long timeOfDay;
     public boolean isLooping;
     public int maxLoops;
@@ -56,7 +56,7 @@ public class TheLoop implements ModInitializer {
             // Path configDir = FabricLoader.getInstance().getConfigDir();
             config = TheLoopConfig.load(worldFolder);
             loopIteration = config.loopIteration;
-            looplength = config.loopLength;
+            loopLength = config.loopLength;
             isLooping = config.isLooping;
             timeOfDay = config.timeOfDay;
 
@@ -136,6 +136,7 @@ public class TheLoop implements ModInitializer {
                 LOGGER.debug("Starting iteration {} of recording loop", loopIteration);
 
                 saveRecordings();
+                removeOldSceneEntries();
                 startRecordings();
                 // set time of day to start of the loop
                 serverWorld.setTimeOfDay(timeOfDay);
@@ -151,7 +152,7 @@ public class TheLoop implements ModInitializer {
 
                 LOGGER.info("Completed loop iteration {}", loopIteration - 1);
             }
-        }, looplength, looplength);
+        }, loopLength, loopLength);
     }
     private void startRecordings() {
         // Start recording for every player
@@ -214,5 +215,15 @@ public class TheLoop implements ModInitializer {
             LOGGER.error("Expected recording file does not exist: {}", recordingFile.toAbsolutePath());
         }
         return exists;
+    }
+
+    private void removeOldSceneEntries() {
+        if (isLooping) {
+            if (maxLoops > 1) {
+
+            }
+        }
+        // not implemented yet. used to enforce a max number of loops running at once. Should work by removing entries from the scene json
+
     }
 }
