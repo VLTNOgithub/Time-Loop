@@ -14,8 +14,8 @@ public class TheLoopConfig {
     public String sceneName = "loop_scene";
     public int loopIteration = 1;
     public boolean isLooping = false;
-    public int loopLength = 300000; // Default: 60,000 ms (i.e. 5 minutes)
-    public int maxLoops = 50;
+    public int loopLength = 6000; // Default: 6000 ticks (i.e. 5 minutes)
+    public int maxLoops = 0; //No limit by default
     public long timeOfDay = 0;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

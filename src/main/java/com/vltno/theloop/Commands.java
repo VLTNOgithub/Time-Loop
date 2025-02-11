@@ -6,11 +6,11 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class Commands {
-    private static final Logger LOGGER = LoggerFactory.getLogger("theloop");
+    private static final Logger LOGGER = LoggerFactory.getLogger("LoopCommands");
     private final TheLoop mod;
 
     public Commands(TheLoop mod) {
@@ -60,17 +60,17 @@ public class Commands {
                 .then(CommandManager.literal("setlength")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Current loop length is " + mod.loopLength + " ms"));
+                            context.getSource().sendMessage(Text.literal("Current loop length is " + mod.loopLength + " ticks"));
                             return 1;
                         })
-                        .then(CommandManager.argument("ms", IntegerArgumentType.integer(100))
+                        .then(CommandManager.argument("ticks", IntegerArgumentType.integer(100))
                                 .executes(context -> {
-                                    int newLength = IntegerArgumentType.getInteger(context, "ms");
+                                    int newLength = IntegerArgumentType.getInteger(context, "ticks");
                                     mod.loopLength = newLength;
                                     mod.config.loopLength = newLength;
                                     mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ms"));
-                                    LOGGER.info("Loop length set to {} ms", newLength);
+                                    context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ticks"));
+                                    LOGGER.info("Loop length set to {} ticks", newLength);
                                     return 1;
                                 })))
 
