@@ -253,4 +253,6 @@ public class TheLoop implements ModInitializer {
 // use this instead is the future
 // mocap playback stop_all including_others
 // mocap playback start -_._._
+
+// need to store the amount of playbacks stated for each player to make maxLoops work with this
 // mocap playback stop 009--LuigiByte.LuigiByte.1

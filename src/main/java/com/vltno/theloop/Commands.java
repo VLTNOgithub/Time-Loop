@@ -57,27 +57,27 @@ public class Commands {
                             return 1;
                         }))
 
-                .then(CommandManager.literal("setlength")
+                .then(CommandManager.literal("setLength")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Current loop length is " + mod.loopLength + " ticks"));
+                            context.getSource().sendMessage(Text.literal("Loop length is set to: " + mod.loopLength + " ticks"));
                             return 1;
                         })
-                        .then(CommandManager.argument("ticks", IntegerArgumentType.integer(100))
+                        .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
                                 .executes(context -> {
                                     int newLength = IntegerArgumentType.getInteger(context, "ticks");
                                     mod.loopLength = newLength;
                                     mod.config.loopLength = newLength;
                                     mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ticks"));
+                                    context.getSource().sendMessage(Text.literal("Loop length is set to: " + newLength + " ticks"));
                                     LOGGER.info("Loop length set to {} ticks", newLength);
                                     return 1;
                                 })))
 
-                .then(CommandManager.literal("maxloops")
+                .then(CommandManager.literal("maxLoops")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Current maxloops is " + mod.maxLoops));
+                            context.getSource().sendMessage(Text.literal("maxLoops is currently set to: " + mod.maxLoops));
                             return 1;
                         })
                         .then(CommandManager.argument("value", IntegerArgumentType.integer(0))
@@ -86,7 +86,7 @@ public class Commands {
                                     mod.maxLoops = maxLoops;
                                     mod.config.maxLoops = maxLoops;
                                     mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Max Loops set to " + maxLoops));
+                                    context.getSource().sendMessage(Text.literal("maxLoops is currently set to: " + maxLoops));
                                     LOGGER.info("Max Loops set to {}", maxLoops);
                                     return 1;
                                 })))
