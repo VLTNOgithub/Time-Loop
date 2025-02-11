@@ -59,29 +59,37 @@ public class Commands {
 
                 .then(CommandManager.literal("setlength")
                         .requires(source -> source.hasPermissionLevel(2))
-                        .then(CommandManager.argument("value", IntegerArgumentType.integer(10000))
                         .executes(context -> {
-                            int newLength = IntegerArgumentType.getInteger(context, "value");
-                            mod.loopLength = newLength;
-                            mod.config.loopLength = newLength;
-                            mod.config.save();
-                            context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ms"));
-                            LOGGER.info("Loop length set to {} ms", newLength);
+                            context.getSource().sendMessage(Text.literal("Current loop length is " + mod.loopLength + " ms"));
                             return 1;
-                        })))
+                        })
+                        .then(CommandManager.argument("ms", IntegerArgumentType.integer(100))
+                                .executes(context -> {
+                                    int newLength = IntegerArgumentType.getInteger(context, "ms");
+                                    mod.loopLength = newLength;
+                                    mod.config.loopLength = newLength;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ms"));
+                                    LOGGER.info("Loop length set to {} ms", newLength);
+                                    return 1;
+                                })))
 
                 .then(CommandManager.literal("maxloops")
                         .requires(source -> source.hasPermissionLevel(2))
-                        .then(CommandManager.argument("value", IntegerArgumentType.integer(0))
                         .executes(context -> {
-                            int maxLoops = IntegerArgumentType.getInteger(context, "value");
-                            mod.maxLoops = maxLoops;
-                            mod.config.maxLoops = maxLoops;
-                            mod.config.save();
-                            context.getSource().sendMessage(Text.literal("Max Loops set to " + maxLoops));
-                            LOGGER.info("Max Loops set to {}", maxLoops);
+                            context.getSource().sendMessage(Text.literal("Current maxloops is " + mod.maxLoops));
                             return 1;
-                        })))
+                        })
+                        .then(CommandManager.argument("value", IntegerArgumentType.integer(0))
+                                .executes(context -> {
+                                    int maxLoops = IntegerArgumentType.getInteger(context, "value");
+                                    mod.maxLoops = maxLoops;
+                                    mod.config.maxLoops = maxLoops;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Max Loops set to " + maxLoops));
+                                    LOGGER.info("Max Loops set to {}", maxLoops);
+                                    return 1;
+                                })))
 
                 .then(CommandManager.literal("reset")
                         .requires(source -> source.hasPermissionLevel(2))
@@ -90,8 +98,8 @@ public class Commands {
                             mod.timeOfDay = 0;
                             mod.config.timeOfDay = 0;
                             mod.executeCommand("mocap playback stop_all");
-                            mod.executeCommand("mocap scenes remove main_scene");
-                            mod.executeCommand("mocap scenes add main_scene");
+                            mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
+                            mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));
                             mod.loopIteration = 0;
                             mod.config.loopIteration = 0;
                             mod.config.save();

@@ -11,7 +11,8 @@ import java.nio.file.Path;
 
 public class TheLoopConfig {
     // These values will be loaded/saved from/to the JSON config file.
-    public int loopIteration = 0;
+    public String sceneName = "loop_scene";
+    public int loopIteration = 1;
     public boolean isLooping = false;
     public int loopLength = 300000; // Default: 60,000 ms (i.e. 5 minutes)
     public int maxLoops = 50;

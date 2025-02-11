@@ -29,6 +29,7 @@ public class TheLoop implements ModInitializer {
     public long timeOfDay;
     public boolean isLooping;
     public int maxLoops;
+    public String sceneName;
     private Timer recordingTimer;
     private List<String> recordingPlayers; // Add this field
 
@@ -59,16 +60,18 @@ public class TheLoop implements ModInitializer {
             loopLength = config.loopLength;
             isLooping = config.isLooping;
             timeOfDay = config.timeOfDay;
+            sceneName = config.sceneName;
 
             TheLoop.server = server;
             this.serverWorld = server.getOverworld();
             executeCommand("mocap settings recording record_player_death false");
             executeCommand("mocap settings recording track_entities @items");
-            executeCommand("mocap scenes add loop_scene");
+            executeCommand(String.format("mocap scenes add %s", sceneName));
             if (config.isLooping) {
                 LOGGER.info("Loop was active in config, automatically restarting loop.");
                 // Reset the in-memory flag so that startLoop() does not return early.
                 isLooping = false;
+                executeCommand(String.format("mocap playback start .%s", sceneName));
                 startLoop();
             }
         });
@@ -101,7 +104,7 @@ public class TheLoop implements ModInitializer {
                 executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
                 executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
                 if (recordingFileExists(recordingName)) {
-                    executeCommand(String.format("mocap scenes add_to loop_scene %s", recordingName.toLowerCase()));
+                    executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
                 }
             }
         });
@@ -143,7 +146,7 @@ public class TheLoop implements ModInitializer {
 
                 // Restart playback commands
                 executeCommand("mocap playback stop_all");
-                executeCommand("mocap playback start .loop_scene");
+                executeCommand(String.format("mocap playback start .%s", sceneName));
 
                 // Increment and update loop iteration in the config file
                 loopIteration++;
@@ -170,7 +173,7 @@ public class TheLoop implements ModInitializer {
             executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
             executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
             if (recordingFileExists(recordingName)) {
-                executeCommand(String.format("mocap scenes add_to loop_scene %s", recordingName.toLowerCase()));
+                executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
             }
         }
     }
@@ -220,10 +223,43 @@ public class TheLoop implements ModInitializer {
     private void removeOldSceneEntries() {
         if (isLooping) {
             if (maxLoops > 1) {
+                Path sceneDir = worldFolder.resolve("mocap_files").resolve("scenes");
+                Path sceneFile = sceneDir.resolve(sceneName+".mcmocap_scene");
 
+                // Check if the scene file exists
+                if (sceneFile.toFile().exists()) {
+                    try {
+                        // Load the scene data from the file
+                        String jsonContent = new String(java.nio.file.Files.readAllBytes(sceneFile));
+
+                        // Parse the content
+                        com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonContent).getAsJsonObject();
+                        com.google.gson.JsonArray subscenes = jsonObject.getAsJsonArray("subscenes");
+
+                        // Check if we have more scenes than maxLoops
+                        if (subscenes.size() > maxLoops) {
+                            // Calculate the number of scenes to remove
+                            int entriesToRemove = subscenes.size() - maxLoops;
+                            // Remove the excess entries (removing from the start of the array)
+                            for (int i = 0; i < entriesToRemove; i++) {
+                                subscenes.remove(0); // Remove the first (oldest) entry
+                            }
+
+                            // Update the JSON object with the modified subscenes array
+                            jsonObject.add("subscenes", subscenes);
+
+                            // Write the updated JSON back to the file
+                            java.nio.file.Files.write(sceneFile, jsonObject.toString().getBytes());
+                            LOGGER.info("Removed old scene entries to maintain maxLoops: {}", maxLoops);
+                        }
+                    } catch (java.io.IOException e) {
+                        LOGGER.error("Failed to read or write scene file: {}", sceneFile, e);
+                    }
+                } else {
+                    LOGGER.error("Scene file does not exist: {}", sceneFile);
+                }
             }
         }
-        // not implemented yet. used to enforce a max number of loops running at once. Should work by removing entries from the scene json
-
     }
+
 }
