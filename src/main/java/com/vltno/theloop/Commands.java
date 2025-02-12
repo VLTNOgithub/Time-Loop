@@ -78,7 +78,7 @@ public class Commands {
                 .then(CommandManager.literal("loopBasedOnTime")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + mod.timeSetting));
+                            context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + mod.loopBasedOnTime));
                             return 1;
                         })
                         .then(CommandManager.argument("bool", BoolArgumentType.bool())
@@ -95,14 +95,14 @@ public class Commands {
                 .then(CommandManager.literal("loopOnSleep")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + mod.timeSetting));
+                            context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + mod.loopOnSleep));
                             return 1;
                         })
                         .then(CommandManager.argument("bool", BoolArgumentType.bool())
                                 .executes(context -> {
                                     boolean newLoopOnSleep = BoolArgumentType.getBool(context, "bool");
-                                    mod.loopBasedOnTime = newLoopOnSleep;
-                                    mod.config.loopBasedOnTime = newLoopOnSleep;
+                                    mod.loopOnSleep = newLoopOnSleep;
+                                    mod.config.loopOnSleep = newLoopOnSleep;
                                     mod.config.save();
                                     context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + newLoopOnSleep));
                                     LOGGER.info("Looping on sleep set to {}", newLoopOnSleep);

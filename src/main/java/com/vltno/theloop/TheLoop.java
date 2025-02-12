@@ -10,6 +10,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,14 @@ public class TheLoop implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
 				commands.register(dispatcher, registryAccess, environment)
 		);
+
+		EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
+			LOOP_LOGGER.info("Loop on sleep: " + loopOnSleep);
+			if (entity.isPlayer() && loopOnSleep) {
+				LOOP_LOGGER.info("PLAYER SLEPT, LOOPING");
+				runLoopIteration();
+			}
+		});
 		
 		// Register server started event
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
@@ -68,14 +77,6 @@ public class TheLoop implements ModInitializer {
 			loopBasedOnTime = config.loopBasedOnTime;
 			loopOnSleep = config.loopOnSleep;
 			sceneName = config.sceneName;
-
-			EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
-				LOOP_LOGGER.debug("ENTITY SLEPT");
-				if (entity.getType() == EntityType.PLAYER && loopOnSleep) {
-					LOOP_LOGGER.debug("PLAYER SLEPT, LOOPING");
-					runLoopIteration();
-				}
-			});
 			
 			TheLoop.server = server;
 			this.serverWorld = server.getOverworld();
@@ -148,9 +149,6 @@ public class TheLoop implements ModInitializer {
 		config.isLooping = true;
 		timeOfDay = serverWorld.getTimeOfDay();
 		config.timeOfDay = timeOfDay;
-		config.timeSetting = timeSetting;
-		config.loopBasedOnTime = loopBasedOnTime;
-		config.loopOnSleep = loopOnSleep;
 		tickCounter = 0;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();
