@@ -16,7 +16,9 @@ public class TheLoopConfig {
     public boolean isLooping = false;
     public int loopLength = 6000; // Default: 6000 ticks (i.e. 5 minutes)
     public int maxLoops = 0; //No limit by default
+    public long timeSetting = 0;
     public long timeOfDay = 0;
+    public boolean loopBasedOnTime;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;

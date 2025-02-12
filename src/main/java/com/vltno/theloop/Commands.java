@@ -1,6 +1,7 @@
 package com.vltno.theloop;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.CommandManager;
@@ -50,8 +51,8 @@ public class Commands {
                 .then(CommandManager.literal("status")
                         .executes(context -> {
                             String status = mod.isLooping ?
-                                    "Loop is active. Current iteration: " + mod.loopIteration :
-                                    "Loop is inactive. Last iteration: " + mod.loopIteration;;
+                                    "Loop is active. Current iteration: " + mod.loopIteration + " Time of day: " + mod.timeOfDay:
+                                    "Loop is inactive. Last iteration: " + mod.loopIteration + " Time of day: " + mod.timeOfDay;
                             context.getSource().sendMessage(Text.literal(status));
                             LOGGER.debug("Status requested: {}", status);
                             return 1;
@@ -71,6 +72,40 @@ public class Commands {
                                     mod.config.save();
                                     context.getSource().sendMessage(Text.literal("Loop length is set to: " + newLength + " ticks"));
                                     LOGGER.info("Loop length set to {} ticks", newLength);
+                                    return 1;
+                                })))
+
+                .then(CommandManager.literal("loopBasedOnTime")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .executes(context -> {
+                            context.getSource().sendMessage(Text.literal("Time is set to: " + mod.timeSetting));
+                            return 1;
+                        })
+                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
+                                .executes(context -> {
+                                    boolean newLoopBasedOnTime = BoolArgumentType.getBool(context, "bool");
+                                    mod.loopBasedOnTime = newLoopBasedOnTime;
+                                    mod.config.loopBasedOnTime = newLoopBasedOnTime;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + newLoopBasedOnTime));
+                                    LOGGER.info("Looping based on time set to {}", newLoopBasedOnTime);
+                                    return 1;
+                                })))
+                
+                .then(CommandManager.literal("setTime")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .executes(context -> {
+                            context.getSource().sendMessage(Text.literal("Time is set to: " + mod.timeSetting));
+                            return 1;
+                        })
+                        .then(CommandManager.argument("time", IntegerArgumentType.integer(0))
+                                .executes(context -> {
+                                    int newTime = IntegerArgumentType.getInteger(context, "time");
+                                    mod.timeSetting = newTime;
+                                    mod.config.timeSetting = newTime;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Time is set to: " + newTime));
+                                    LOGGER.info("Time set to {}", newTime);
                                     return 1;
                                 })))
 
@@ -96,7 +131,7 @@ public class Commands {
                         .executes(context -> {
                             mod.stopLoop();
                             mod.timeOfDay = 0;
-                            mod.config.timeOfDay = 0;
+                            mod.config.timeSetting = 0;
                             mod.executeCommand("mocap playback stop_all");
                             mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
                             mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));
