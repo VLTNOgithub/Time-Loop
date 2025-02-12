@@ -2,9 +2,11 @@ package com.vltno.theloop;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.entity.EntityType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -27,6 +29,7 @@ public class TheLoop implements ModInitializer {
 	public long timeOfDay;
 	public long timeSetting;
 	public boolean loopBasedOnTime;
+	public boolean loopOnSleep;
 	public boolean isLooping;
 	public int maxLoops;
 	public String sceneName;
@@ -63,7 +66,16 @@ public class TheLoop implements ModInitializer {
 			timeOfDay = config.timeOfDay;
 			timeSetting = config.timeSetting;
 			loopBasedOnTime = config.loopBasedOnTime;
+			loopOnSleep = config.loopOnSleep;
 			sceneName = config.sceneName;
+
+			EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
+				LOOP_LOGGER.debug("ENTITY SLEPT");
+				if (entity.getType() == EntityType.PLAYER && loopOnSleep) {
+					LOOP_LOGGER.debug("PLAYER SLEPT, LOOPING");
+					runLoopIteration();
+				}
+			});
 			
 			TheLoop.server = server;
 			this.serverWorld = server.getOverworld();
@@ -138,6 +150,7 @@ public class TheLoop implements ModInitializer {
 		config.timeOfDay = timeOfDay;
 		config.timeSetting = timeSetting;
 		config.loopBasedOnTime = loopBasedOnTime;
+		config.loopOnSleep = loopOnSleep;
 		tickCounter = 0;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();

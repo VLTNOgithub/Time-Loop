@@ -19,6 +19,7 @@ public class TheLoopConfig {
     public long timeSetting = 0;
     public long timeOfDay = 0;
     public boolean loopBasedOnTime;
+    public boolean loopOnSleep;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;

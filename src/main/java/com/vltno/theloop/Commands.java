@@ -78,7 +78,7 @@ public class Commands {
                 .then(CommandManager.literal("loopBasedOnTime")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Time is set to: " + mod.timeSetting));
+                            context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + mod.timeSetting));
                             return 1;
                         })
                         .then(CommandManager.argument("bool", BoolArgumentType.bool())
@@ -89,6 +89,23 @@ public class Commands {
                                     mod.config.save();
                                     context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + newLoopBasedOnTime));
                                     LOGGER.info("Looping based on time set to {}", newLoopBasedOnTime);
+                                    return 1;
+                                })))
+                
+                .then(CommandManager.literal("loopOnSleep")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .executes(context -> {
+                            context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + mod.timeSetting));
+                            return 1;
+                        })
+                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
+                                .executes(context -> {
+                                    boolean newLoopOnSleep = BoolArgumentType.getBool(context, "bool");
+                                    mod.loopBasedOnTime = newLoopOnSleep;
+                                    mod.config.loopBasedOnTime = newLoopOnSleep;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + newLoopOnSleep));
+                                    LOGGER.info("Looping on sleep set to {}", newLoopOnSleep);
                                     return 1;
                                 })))
                 
@@ -131,7 +148,13 @@ public class Commands {
                         .executes(context -> {
                             mod.stopLoop();
                             mod.timeOfDay = 0;
+                            mod.config.timeOfDay = 0;
+                            mod.timeSetting = 0;
                             mod.config.timeSetting = 0;
+                            mod.loopBasedOnTime = false;
+                            mod.config.loopBasedOnTime = false;
+                            mod.loopOnSleep = false;
+                            mod.config.loopOnSleep = false;
                             mod.executeCommand("mocap playback stop_all");
                             mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
                             mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));
