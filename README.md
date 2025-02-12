@@ -17,11 +17,11 @@ Simply use commands to configure the loop.
 
 `/loop reset` - Reset the loop and go back to the first recording. **This doesn't delete the recordings as of yet but it's being worked on.**
 
-`/loop setlength 6000` - Set the duration / length of the loop. The unit is ticks (6000 ticks is 5 mins).
+`/loop setLength 6000` - Set the duration / length of the loop. The unit is ticks (6000 ticks is 5 mins).
 
 `/loop status` - Shows the status of the loop in chat.
 
-`/loop maxloops 0` - Sets the maximum amount of loops. 0 is infinite.
+`/loop maxLoops 0` - Sets the maximum amount of loops. 0 is infinite.
 
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
