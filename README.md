@@ -21,5 +21,7 @@ Simply use commands to configure the loop.
 
 `/loop status` - Shows the status of the loop in chat.
 
+`/loop maxloops 0` - Sets the maximum amount of loops. 0 is infinite.
+
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
