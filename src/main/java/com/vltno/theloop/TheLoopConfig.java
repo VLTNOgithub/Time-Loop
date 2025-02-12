@@ -11,8 +11,12 @@ import java.nio.file.Path;
 
 public class TheLoopConfig {
     // These values will be loaded/saved from/to the JSON config file.
-    public int loopIteration = 0;
-    public int loopLength = 60000; // Default: 60,000 ms (i.e. 1 minute)
+    public String sceneName = "loop_scene";
+    public int loopIteration = 1;
+    public boolean isLooping = false;
+    public int loopLength = 6000; // Default: 6000 ticks (i.e. 5 minutes)
+    public int maxLoops = 0; //No limit by default
+    public long timeOfDay = 0;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;

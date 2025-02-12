@@ -1,236 +1,258 @@
 package com.vltno.theloop;
 
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.nio.file.Path;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TheLoop implements ModInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger("theloop");
+    public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TheLoop");
+    private Commands commands;
     private static MinecraftServer server;
+    private ServerWorld serverWorld;
 
     // These fields will be initialized from the configuration file.
-    private int loopIteration;
-    private int looplength;
-    private Timer recordingTimer;
-    private boolean isRecording = false;
+    public int loopIteration;
+    public int loopLength;
+    public long timeOfDay;
+    public boolean isLooping;
+    public int maxLoops;
+    public String sceneName;
+    private int tickCounter = 0; // Tracks elapsed ticks
+    private List<String> recordingPlayers; // Add this field
 
     // The configuration object loaded from disk
-    private TheLoopConfig config;
+    public TheLoopConfig config;
+
+    // Get the world folder path for config/recording loading
+    private Path worldFolder;
+
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Initializing TheLoop mod");
+        LOOP_LOGGER.info("Initializing TheLoop mod");
+        recordingPlayers = new ArrayList<>(); // Initialize the list
 
-        // Load configuration from the config folder provided by FabricLoader
-        Path configDir = FabricLoader.getInstance().getConfigDir();
-        config = TheLoopConfig.load(configDir);
-        loopIteration = config.loopIteration;
-        looplength = config.loopLength;
+        // Register commands
+        commands = new Commands(this);
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
+                commands.register(dispatcher, registryAccess, environment)
+        );
 
-        // Register server starting event
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            TheLoop.server = server;
-        });
         // Register server started event
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            executeCommand("mocap scenes add main_scene");
+            // Load configuration from the config folder provided by FabricLoader
+            worldFolder = server.getSavePath(WorldSavePath.ROOT);
+            config = TheLoopConfig.load(worldFolder);
+
+            loopIteration = config.loopIteration;
+            loopLength = config.loopLength;
+            isLooping = config.isLooping;
+            timeOfDay = config.timeOfDay;
+            sceneName = config.sceneName;
+
+            TheLoop.server = server;
+            this.serverWorld = server.getOverworld();
+            executeCommand("mocap settings playback start_as_recorded true");
+            executeCommand("mocap settings recording record_player_death false");
+            executeCommand("mocap settings playback play_entities @none");
+            executeCommand(String.format("mocap scenes add %s", sceneName));
+            if (config.isLooping) {
+                LOOP_LOGGER.info("Loop was active in config, automatically restarting loop.");
+                // Reset the in-memory flag so that startLoop() does not return early.
+                isLooping = false;
+                executeCommand(String.format("mocap playback start .%s", sceneName));
+                startLoop();
+            }
         });
 
-        // Register player join event
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            if (isLooping) {
+                stopLoop();
+                config.isLooping = true;
+            }
+        });
+
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
             String playerName = player.getName().getString();
-
-            if (isRecording) {
-                LOGGER.debug("Starting recording for newly joined player: {}", playerName);
+            recordingPlayers.add(playerName); // Add to recording list
+            if (isLooping) {
+                LOOP_LOGGER.debug("Starting recording for newly joined player: {}", playerName);
                 executeCommand(String.format("mocap recording start %s", playerName));
             }
         });
+
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
             String playerName = player.getName().getString();
-            String recordingName = playerName + "_" + loopIteration;
-            executeCommand(String.format("mocap recording stop %s", playerName));
-            boolean saved = executeCommand(String.format("mocap recording save %s", recordingName.toLowerCase()));
-            if (saved) {
-                executeCommand(String.format("mocap scenes addTo main_scene %s", recordingName.toLowerCase()));
+            recordingPlayers.remove(playerName); // Remove from recording list
+            if (isLooping) {
+                LOOP_LOGGER.debug("Saving recording for Disconnected player: {}", playerName);
+                String recordingName = playerName + "_" + System.currentTimeMillis();
+                executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
+                executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
+                if (recordingFileExists(recordingName)) {
+                    executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
+                }
             }
         });
 
-        // Register commands
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            dispatcher.register(CommandManager.literal("loop")
-                    .then(CommandManager.literal("start")
-                            .requires(source -> source.hasPermissionLevel(2))
-                            .executes(context -> {
-                                startLoop();
-                                context.getSource().sendMessage(Text.literal("Recording loop started"));
-                                LOGGER.info("Recording loop started by {}", context.getSource().getName());
-                                return 1;
-                            }))
-                    .then(CommandManager.literal("stop")
-                            .requires(source -> source.hasPermissionLevel(2))
-                            .executes(context -> {
-                                stopRecordingLoop();
-                                context.getSource().sendMessage(Text.literal("Recording loop stopped"));
-                                LOGGER.info("Recording loop stopped");
-                                return 1;
-                            }))
-                    .then(CommandManager.literal("status")
-                            .executes(context -> {
-                                String status = isRecording ?
-                                        "Loop is active. Current iteration: " + loopIteration :
-                                        "Loop is inactive. Last iteration: " + loopIteration;
-                                context.getSource().sendMessage(Text.literal(status));
-                                LOGGER.debug("Status requested by {}: {}", context.getSource().getName(), status);
-                                return 1;
-                            }))
-                    .then(CommandManager.literal("setlength")
-                            .requires(source -> source.hasPermissionLevel(2))
-                            .then(CommandManager.argument("value", IntegerArgumentType.integer(1000)) // Minimum 1000 ms
-                                .executes(context -> {
-                                    int newLength = IntegerArgumentType.getInteger(context, "value");
-                                    looplength = newLength;
-                                    config.loopLength = newLength;
-                                    config.save();
-                                    context.getSource().sendMessage(Text.literal("Loop length set to " + newLength + " ms"));
-                                    LOGGER.info("Loop length set to {} ms", newLength);
-                                    return 1;
-                                })))
-                    .then(CommandManager.literal("reset")
-                            .requires(source -> source.hasPermissionLevel(2))
-                            .executes(context -> {
-                                stopRecordingLoop();
-                                executeCommand("mocap scenes remove main_scene");
-                                executeCommand("mocap scenes add main_scene");
-                                loopIteration = 0;
-                                LOGGER.debug("Loop reset!");
-                                // Broadcast status to operators
-                                server.getPlayerManager().getPlayerList().forEach(player -> {
-                                    if (player.hasPermissionLevel(2)) {
-                                        player.sendMessage(Text.literal("Loop reset!"));
-                                    }
-                                });
-                                return 1;
-                            })));
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (isLooping) {
+                tickCounter++;
+                if (tickCounter >= loopLength) {
+                    tickCounter = 0; // Reset counter
+                    runLoopIteration();
+                }
+            }
         });
 
-        // Initialize timer
-        recordingTimer = new Timer();
-        LOGGER.info("TheLoop mod initialized successfully");
+        LOOP_LOGGER.info("TheLoop mod initialized successfully");
     }
 
     public void startLoop() {
-        if (isRecording) {
-            LOGGER.debug("Attempted to start already running recording loop");
+        if (isLooping) {
+            LOOP_LOGGER.debug("Attempted to start already running recording loop");
             return;
         }
-        isRecording = true;
-        LOGGER.info("Starting Loop");
-        
-        executeCommand("mocap settings recordPlayerDeath false");
+        isLooping = true;
+        config.isLooping = true;
+        timeOfDay = serverWorld.getTimeOfDay();
+        config.timeOfDay = timeOfDay;
+        tickCounter = 0;
+        LOOP_LOGGER.info("Starting Loop");
+        startRecordings();
+    }
 
-        // Start recording for every currently online player
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            String playerName = player.getName().getString();
+    private void runLoopIteration() {
+        LOOP_LOGGER.debug("Starting iteration {} of recording loop", loopIteration);
+        saveRecordings();
+        removeOldSceneEntries();
+        startRecordings();
+        serverWorld.setTimeOfDay(timeOfDay);
+        executeCommand("mocap playback stop_all including_others");
+        executeCommand(String.format("mocap playback start .%s", sceneName));
+        loopIteration++;
+        config.loopIteration = loopIteration;
+        config.save();
+        LOOP_LOGGER.info("Completed loop iteration {}", loopIteration - 1);
+    }
+
+    private void startRecordings() {
+        // Start recording for every player
+        for (String playerName : recordingPlayers) {
             executeCommand(String.format("mocap recording start %s", playerName));
         }
-
-        // Schedule the recording loop using the saved loop length from the config.
-        recordingTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (!isRecording) {
-                    LOGGER.debug("Loop stopped, cancelling timer");
-                    this.cancel();
-                    return;
-                }
-
-                LOGGER.debug("Starting iteration {} of recording loop", loopIteration);
-
-                // Stop and save recordings for each player
-                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    String playerName = player.getName().getString();
-                    String recordingName = playerName + "_" + loopIteration;
-
-                    LOGGER.debug("Processing recording for player: {}", playerName);
-                    executeCommand("mocap recording stop");
-                    boolean saved = executeCommand(String.format("mocap recording save %s", recordingName.toLowerCase()));
-                    if (saved) {
-                        executeCommand(String.format("mocap scenes addTo .main_scene %s", recordingName.toLowerCase()));
-                    }
-                    // start recording
-                    executeCommand(String.format("mocap recording start %s", playerName));
-                }
-
-                // Broadcast status to operators
-                server.getPlayerManager().getPlayerList().forEach(player -> {
-                    if (player.hasPermissionLevel(2)) {
-                        player.sendMessage(Text.literal("Loop iteration " + loopIteration + " completed"));
-                    }
-                });
-
-                // Restart playback commands
-                executeCommand("mocap playing stopAll");
-                executeCommand("mocap playing start .main_scene");
-
-                // Increment and update loop iteration in the config file
-                loopIteration++;
-                config.loopIteration = loopIteration;
-                config.save();
-
-                LOGGER.info("Completed loop iteration {}", loopIteration - 1);
-            }
-        }, looplength, looplength);
     }
 
-    public void stopRecordingLoop() {
-        LOGGER.info("Stopping loop");
-        isRecording = false;
-        if (recordingTimer != null) {
-            recordingTimer.cancel();
-            recordingTimer.purge();
-            recordingTimer = new Timer();
-            LOGGER.debug("Loop timer cancelled and reset");
+    public void saveRecordings() {
+        // Stop and save recordings for each player
+        for (String playerName : recordingPlayers) {
+            String recordingName = playerName + "_" + System.currentTimeMillis();
+
+            LOOP_LOGGER.debug("Processing recording for player: {}", playerName);
+            executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
+            executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
+            if (recordingFileExists(recordingName)) {
+                executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
+            }
         }
     }
 
-    /**
-     * Executes a server command.
-     *
-     * @param command the command to execute.
-     * @return true if the command executed without exception.
-     */
-    private boolean executeCommand(String command) {
+    public void stopLoop() {
+        if (isLooping) {
+            LOOP_LOGGER.info("Stopping loop");
+            isLooping = false;
+            config.isLooping = false;
+            saveRecordings();
+            executeCommand("mocap playback stop_all including_others");
+            tickCounter = 0;
+            LOOP_LOGGER.debug("Loop stopped!");
+        }
+    }
+
+    public void executeCommand(String command) {
         if (server != null) {
-            LOGGER.debug("Executing command: {}", command);
-            try {
-                server.getCommandManager().executeWithPrefix(
-                        server.getCommandSource(),
-                        command
-                );
-                LOGGER.debug("Command executed successfully: {}", command);
-                return true;
-            } catch (Exception e) {
-                LOGGER.error("Error executing command {}: {}", command, e.getMessage());
-                return false;
-            }
+            LOOP_LOGGER.debug("Executing command: {}", command);
+            // Execute the command without expecting a return value.
+            server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
+            LOOP_LOGGER.debug("Command executed successfully: {}", command);
+            // For commands like "mocap recording save" you might need an alternative method
+            // to verify success (for example, by checking for expected side effects).
         } else {
-            LOGGER.error("Attempted to execute command while server is null: {}", command);
-            return false;
+            LOOP_LOGGER.error("Attempted to execute command while server is null: {}", command);
+        }
+    }
+
+    private boolean recordingFileExists(String recordingName) {
+        // Build the complete path for the recording directory using the absolute world path
+        Path recordingDir = worldFolder.resolve("mocap_files").resolve("recordings");
+        Path recordingFile = recordingDir.resolve(recordingName.toLowerCase() + ".mcmocap_rec");
+
+        boolean exists = recordingFile.toFile().exists();
+        if (!exists) {
+            LOOP_LOGGER.error("Expected recording file does not exist: {}", recordingFile.toAbsolutePath());
+        }
+        return exists;
+    }
+
+    private void removeOldSceneEntries() {
+        if (isLooping) {
+            if (maxLoops > 1) {
+                Path sceneDir = worldFolder.resolve("mocap_files").resolve("scenes");
+                Path sceneFile = sceneDir.resolve(sceneName+".mcmocap_scene");
+
+                // Check if the scene file exists
+                if (sceneFile.toFile().exists()) {
+                    try {
+                        // Load the scene data from the file
+                        String jsonContent = new String(java.nio.file.Files.readAllBytes(sceneFile));
+
+                        // Parse the content
+                        com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonContent).getAsJsonObject();
+                        com.google.gson.JsonArray subScenes = jsonObject.getAsJsonArray("subscenes");
+
+                        // Check if we have more scenes than maxLoops
+                        if (subScenes.size() > maxLoops) {
+                            // Calculate the number of scenes to remove
+                            int entriesToRemove = subScenes.size() - maxLoops;
+                            // Remove the excess entries (removing from the start of the array)
+                            for (int i = 0; i < entriesToRemove; i++) {
+                                subScenes.remove(0); // Remove the first (oldest) entry
+                            }
+
+                            // Update the JSON object with the modified subScenes array
+                            jsonObject.add("subScenes", subScenes);
+
+                            // Write the updated JSON back to the file
+                            java.nio.file.Files.write(sceneFile, jsonObject.toString().getBytes());
+                            LOOP_LOGGER.info("Removed old scene entries to maintain maxLoops: {}", maxLoops);
+                        }
+                    } catch (java.io.IOException e) {
+                        LOOP_LOGGER.error("Failed to read or write scene file: {}", sceneFile, e);
+                    }
+                } else {
+                    LOOP_LOGGER.error("Scene file does not exist: {}", sceneFile);
+                }
+            }
         }
     }
 }
+
+// use this instead is the future
+// mocap playback stop_all including_others
+// mocap playback start -_._._
+
+// need to store the amount of playbacks stated for each player to make maxLoops work with this
+// mocap playback stop 009--LuigiByte.LuigiByte.1
