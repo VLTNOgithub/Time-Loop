@@ -23,5 +23,11 @@ Simply use commands to configure the loop.
 
 `/loop maxLoops 0` - Sets the maximum amount of loops. 0 is infinite.
 
+`/loop loopBasedOnTimeOfDay` - Enables/disables looping based on the time of day.
+
+`/loop setTimeOfDay` - Sets the time of day to loop at (same as minecraft so 13000 is night).
+
+`/loop loopOnSleep` - Enables/disables looping when sleeping.
+
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
