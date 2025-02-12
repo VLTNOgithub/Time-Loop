@@ -127,6 +127,7 @@ public class TheLoop implements ModInitializer {
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (loopOnSleep) { return; }
 			if (loopBasedOnTime) { timeOfDay = serverWorld.getTimeOfDay(); };
 			if (isLooping) {
 				tickCounter++;
