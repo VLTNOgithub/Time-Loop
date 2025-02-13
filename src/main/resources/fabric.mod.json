@@ -1,19 +1,19 @@
 {
 	"schemaVersion": 1,
-	"id": "the-loop",
+	"id": "time-loop",
 	"version": "${version}",
-	"name": "The Loop",
+	"name": "Time Loop",
 	"description": "A set of commands that 'loops' time by using the Motion Capture Mod. Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO",
 	"authors": [
 		"Luigi",
 		"VLTNO"
 	],
 	"license": "CC0-1.0",
-	"icon": "assets/the-loop/icon.png",
+	"icon": "assets/time-loop/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.vltno.theloop.TheLoop"
+			"com.vltno.timeloop.TimeLoop"
 		]
 	},
 	"depends": {

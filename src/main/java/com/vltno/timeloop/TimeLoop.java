@@ -1,4 +1,4 @@
-package com.vltno.theloop;
+package com.vltno.timeloop;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TheLoop implements ModInitializer {
+public class TimeLoop implements ModInitializer {
 	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TheLoop");
 	private Commands commands;
 	private static MinecraftServer server;
@@ -37,7 +37,7 @@ public class TheLoop implements ModInitializer {
 	private List<String> recordingPlayers; // Add this field
 
 	// The configuration object loaded from disk
-	public TheLoopConfig config;
+	public TimeLoopConfig config;
 
 	// Get the world folder path for config/recording loading
 	private Path worldFolder;
@@ -66,7 +66,7 @@ public class TheLoop implements ModInitializer {
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			// Load configuration from the config folder provided by FabricLoader
 			worldFolder = server.getSavePath(WorldSavePath.ROOT);
-			config = TheLoopConfig.load(worldFolder);
+			config = TimeLoopConfig.load(worldFolder);
 
 			loopIteration = config.loopIteration;
 			loopLength = config.loopLength;
@@ -78,7 +78,7 @@ public class TheLoop implements ModInitializer {
 			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
 			
-			TheLoop.server = server;
+			TimeLoop.server = server;
 			this.serverWorld = server.getOverworld();
 			
 			executeCommand("mocap settings advanced experimental_release_warning false");

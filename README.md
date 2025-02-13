@@ -1,4 +1,4 @@
-# The Loop
+# Time Loop
 A mod that 'loops' time by using the Motion Capture Mod.
 *Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi. Fixed by VLTNO.*
 

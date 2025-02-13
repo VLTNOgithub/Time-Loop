@@ -1,4 +1,4 @@
-package com.vltno.theloop;
+package com.vltno.timeloop;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -12,9 +12,9 @@ import org.slf4j.Logger;
 
 public class Commands {
     private static final Logger LOGGER = LoggerFactory.getLogger("LoopCommands");
-    private final TheLoop mod;
+    private final TimeLoop mod;
 
-    public Commands(TheLoop mod) {
+    public Commands(TimeLoop mod) {
         this.mod = mod;
     }
 

@@ -1,4 +1,4 @@
-package com.vltno.theloop;
+package com.vltno.timeloop;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,7 +9,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class TheLoopConfig {
+public class TimeLoopConfig {
     // These values will be loaded/saved from/to the JSON config file.
     public String sceneName = "loop_scene";
     public int loopIteration = 1;
@@ -32,18 +32,18 @@ public class TheLoopConfig {
      * @param configDir the config directory (usually obtained from FabricLoader)
      * @return an instance of TheLoopConfig
      */
-    public static TheLoopConfig load(Path configDir) {
+    public static TimeLoopConfig load(Path configDir) {
         configPath = configDir.resolve("theloop.json");
         if (Files.exists(configPath)) {
             try (Reader reader = Files.newBufferedReader(configPath)) {
-                TheLoopConfig config = GSON.fromJson(reader, TheLoopConfig.class);
+                TimeLoopConfig config = GSON.fromJson(reader, TimeLoopConfig.class);
                 return config;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
         // Create default config if none exists
-        TheLoopConfig config = new TheLoopConfig();
+        TimeLoopConfig config = new TimeLoopConfig();
         config.save();
         return config;
     }
