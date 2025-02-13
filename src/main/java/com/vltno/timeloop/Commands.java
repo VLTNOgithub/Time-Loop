@@ -55,7 +55,7 @@ public class Commands {
                                     "Loop is active. Current iteration: " + mod.loopIteration + extras:
                                     "Loop is inactive. Last iteration: " + mod.loopIteration + extras;
                             context.getSource().sendMessage(Text.literal(status));
-                            LOGGER.debug("Status requested: {}", status);
+                            LOGGER.info("Status requested: {}", status);
                             return 1;
                         }))
 

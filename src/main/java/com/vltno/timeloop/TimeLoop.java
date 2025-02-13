@@ -109,7 +109,7 @@ public class TimeLoop implements ModInitializer {
 			String playerName = player.getName().getString();
 			recordingPlayers.add(playerName); // Add to recording list
 			if (isLooping) {
-				LOOP_LOGGER.debug("Starting recording for newly joined player: {}", playerName);
+				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
 				executeCommand(String.format("mocap recording start %s", playerName));
 			}
 		});
@@ -119,7 +119,7 @@ public class TimeLoop implements ModInitializer {
 			String playerName = player.getName().getString();
 			recordingPlayers.remove(playerName); // Remove from recording list
 			if (isLooping) {
-				LOOP_LOGGER.debug("Saving recording for Disconnected player: {}", playerName);
+				LOOP_LOGGER.info("Saving recording for Disconnected player: {}", playerName);
 				String recordingName = playerName + "_" + System.currentTimeMillis();
 				executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
 				executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
@@ -143,7 +143,7 @@ public class TimeLoop implements ModInitializer {
 			}
 		});
 
-		LOOP_LOGGER.info("TheLoop mod initialized successfully");
+		LOOP_LOGGER.info("TimeLoop mod initialized successfully");
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void startLoop() {
 		if (isLooping) {
-			LOOP_LOGGER.debug("Attempted to start already running recording loop");
+			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
 		}
 		isLooping = true;
@@ -168,7 +168,7 @@ public class TimeLoop implements ModInitializer {
 	 * Runs the next iteration of the loop.
 	 */
 	private void runLoopIteration() {
-		LOOP_LOGGER.debug("Starting iteration {} of recording loop", loopIteration);
+		LOOP_LOGGER.info("Starting iteration {} of recording loop", loopIteration);
 		saveRecordings();
 		removeOldSceneEntries();
 		startRecordings();
@@ -199,7 +199,7 @@ public class TimeLoop implements ModInitializer {
 		for (String playerName : recordingPlayers) {
 			String recordingName = playerName + "_" + System.currentTimeMillis();
 
-			LOOP_LOGGER.debug("Processing recording for player: {}", playerName);
+			LOOP_LOGGER.info("Processing recording for player: {}", playerName);
 			executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
 			executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
 			if (recordingFileExists(recordingName)) {
@@ -220,7 +220,7 @@ public class TimeLoop implements ModInitializer {
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
 			ticksLeft = loopLength;
-			LOOP_LOGGER.debug("Loop stopped!");
+			LOOP_LOGGER.info("Loop stopped!");
 		}
 	}
 
@@ -229,10 +229,10 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void executeCommand(String command) {
 		if (server != null) {
-			LOOP_LOGGER.debug("Executing command: {}", command);
+			LOOP_LOGGER.info("Executing command: {}", command);
 			// Execute the command without expecting a return value.
 			server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
-			LOOP_LOGGER.debug("Command executed successfully: {}", command);
+			LOOP_LOGGER.info("Command executed successfully: {}", command);
 			// For commands like "mocap recording save" you might need an alternative method
 			// to verify success (for example, by checking for expected side effects).
 		} else {
