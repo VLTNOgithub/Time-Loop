@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TimeLoop implements ModInitializer {
-	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TheLoop");
+	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
 	private Commands commands;
 	private static MinecraftServer server;
 	private ServerWorld serverWorld;
@@ -29,6 +29,7 @@ public class TimeLoop implements ModInitializer {
 	public long timeSetting;
 	public boolean loopBasedOnTimeOfDay;
 	public boolean loopOnSleep;
+	public boolean loopTimeOfDay;
 	public boolean isLooping;
 	public int maxLoops;
 	public String sceneName;
@@ -45,7 +46,7 @@ public class TimeLoop implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOOP_LOGGER.info("Initializing TheLoop mod");
+		LOOP_LOGGER.info("Initializing TimeLoop mod");
 		recordingPlayers = new ArrayList<>(); // Initialize the list
 
 		// Register commands
@@ -75,6 +76,7 @@ public class TimeLoop implements ModInitializer {
 			timeSetting = config.timeSetting;
 			loopBasedOnTimeOfDay = config.loopBasedOnTimeOfDay;
 			loopOnSleep = config.loopOnSleep;
+			loopTimeOfDay = config.loopTimeOfDay;
 			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
 			
@@ -144,6 +146,9 @@ public class TimeLoop implements ModInitializer {
 		LOOP_LOGGER.info("TheLoop mod initialized successfully");
 	}
 
+	/**
+	 * Starts and initialises the loop.
+	 */
 	public void startLoop() {
 		if (isLooping) {
 			LOOP_LOGGER.debug("Attempted to start already running recording loop");
@@ -159,12 +164,15 @@ public class TimeLoop implements ModInitializer {
 		startRecordings();
 	}
 
+	/**
+	 * Runs the next iteration of the loop.
+	 */
 	private void runLoopIteration() {
 		LOOP_LOGGER.debug("Starting iteration {} of recording loop", loopIteration);
 		saveRecordings();
 		removeOldSceneEntries();
 		startRecordings();
-		serverWorld.setTimeOfDay(timeOfDay);
+		if ( loopTimeOfDay ) { serverWorld.setTimeOfDay(timeOfDay); }
 		executeCommand("mocap playback stop_all including_others");
 		executeCommand(String.format("mocap playback start .%s", sceneName));
 		loopIteration++;
@@ -173,6 +181,9 @@ public class TimeLoop implements ModInitializer {
 		LOOP_LOGGER.info("Completed loop iteration {}", loopIteration - 1);
 	}
 
+	/**
+	 * Starts the recordings.
+	 */
 	private void startRecordings() {
 		// Start recording for every player
 		for (String playerName : recordingPlayers) {
@@ -180,6 +191,9 @@ public class TimeLoop implements ModInitializer {
 		}
 	}
 
+	/**
+	 * Saves the recordings.
+	 */
 	public void saveRecordings() {
 		// Stop and save recordings for each player
 		for (String playerName : recordingPlayers) {
@@ -194,6 +208,9 @@ public class TimeLoop implements ModInitializer {
 		}
 	}
 
+	/**
+	 * Stops the loop.
+	 */
 	public void stopLoop() {
 		if (isLooping) {
 			LOOP_LOGGER.info("Stopping loop");
@@ -207,6 +224,9 @@ public class TimeLoop implements ModInitializer {
 		}
 	}
 
+	/**
+	 * Executes a minecraft chat command.
+	 */
 	public void executeCommand(String command) {
 		if (server != null) {
 			LOOP_LOGGER.debug("Executing command: {}", command);
@@ -220,6 +240,11 @@ public class TimeLoop implements ModInitializer {
 		}
 	}
 
+	/**
+	 * Checks if a recording exists.
+	 * @param recordingName The name of the recording to check.
+	 * @return True if the file exists. False if it doesn't.
+	 */
 	private boolean recordingFileExists(String recordingName) {
 		// Build the complete path for the recording directory using the absolute world path
 		Path recordingDir = worldFolder.resolve("mocap_files").resolve("recordings");
@@ -232,6 +257,9 @@ public class TimeLoop implements ModInitializer {
 		return exists;
 	}
 
+	/**
+	 * Removes old scene entries to keep within the bounds of maxLoops.
+	 */
 	private void removeOldSceneEntries() {
 		if (isLooping) {
 			if (maxLoops > 1) {

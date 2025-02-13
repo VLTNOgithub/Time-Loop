@@ -20,6 +20,7 @@ public class TimeLoopConfig {
     public long timeOfDay = 0;
     public boolean loopBasedOnTimeOfDay;
     public boolean loopOnSleep;
+    public boolean loopTimeOfDay;
     public int ticksLeft;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -33,7 +34,7 @@ public class TimeLoopConfig {
      * @return an instance of TheLoopConfig
      */
     public static TimeLoopConfig load(Path configDir) {
-        configPath = configDir.resolve("theloop.json");
+        configPath = configDir.resolve("timeloop.json");
         if (Files.exists(configPath)) {
             try (Reader reader = Files.newBufferedReader(configPath)) {
                 TimeLoopConfig config = GSON.fromJson(reader, TimeLoopConfig.class);

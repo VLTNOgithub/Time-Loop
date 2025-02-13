@@ -113,6 +113,23 @@ public class Commands {
                                     LOGGER.info("Looping on sleep set to {}", newLoopOnSleep);
                                     return 1;
                                 })))
+
+                .then(CommandManager.literal("loopTimeOfDay")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .executes(context -> {
+                            context.getSource().sendMessage(Text.literal("Looping the time of day is set to: " + mod.loopOnSleep));
+                            return 1;
+                        })
+                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
+                                .executes(context -> {
+                                    boolean newLoopTimeOfDay = BoolArgumentType.getBool(context, "bool");
+                                    mod.loopTimeOfDay = newLoopTimeOfDay;
+                                    mod.config.loopTimeOfDay = newLoopTimeOfDay;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Looping the time of day is set to: " + newLoopTimeOfDay));
+                                    LOGGER.info("Looping the time of day set to {}", newLoopTimeOfDay);
+                                    return 1;
+                                })))
                 
                 .then(CommandManager.literal("setTimeOfDay")
                         .requires(source -> source.hasPermissionLevel(2))
