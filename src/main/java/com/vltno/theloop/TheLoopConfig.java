@@ -18,8 +18,9 @@ public class TheLoopConfig {
     public int maxLoops = 0; //No limit by default
     public long timeSetting = 0;
     public long timeOfDay = 0;
-    public boolean loopBasedOnTime;
+    public boolean loopBasedOnTimeOfDay;
     public boolean loopOnSleep;
+    public int ticksLeft;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;

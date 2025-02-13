@@ -50,9 +50,10 @@ public class Commands {
 
                 .then(CommandManager.literal("status")
                         .executes(context -> {
+                            String extras = mod.loopOnSleep ? "" : mod.loopBasedOnTimeOfDay ? " Time of day: " + mod.timeOfDay : " Ticks Left: " + mod.ticksLeft;
                             String status = mod.isLooping ?
-                                    "Loop is active. Current iteration: " + mod.loopIteration + " Time of day: " + mod.timeOfDay:
-                                    "Loop is inactive. Last iteration: " + mod.loopIteration + " Time of day: " + mod.timeOfDay;
+                                    "Loop is active. Current iteration: " + mod.loopIteration + extras:
+                                    "Loop is inactive. Last iteration: " + mod.loopIteration + extras;
                             context.getSource().sendMessage(Text.literal(status));
                             LOGGER.debug("Status requested: {}", status);
                             return 1;
@@ -69,26 +70,30 @@ public class Commands {
                                     int newLength = IntegerArgumentType.getInteger(context, "ticks");
                                     mod.loopLength = newLength;
                                     mod.config.loopLength = newLength;
+                                    
+                                    mod.ticksLeft = newLength;
+                                    mod.config.ticksLeft = newLength;
+                                    
                                     mod.config.save();
                                     context.getSource().sendMessage(Text.literal("Loop length is set to: " + newLength + " ticks"));
                                     LOGGER.info("Loop length set to {} ticks", newLength);
                                     return 1;
                                 })))
 
-                .then(CommandManager.literal("loopBasedOnTime")
+                .then(CommandManager.literal("loopBasedOnTimeOfDay")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + mod.loopBasedOnTime));
+                            context.getSource().sendMessage(Text.literal("Looping based on time of day is set to: " + mod.loopBasedOnTimeOfDay));
                             return 1;
                         })
                         .then(CommandManager.argument("bool", BoolArgumentType.bool())
                                 .executes(context -> {
-                                    boolean newLoopBasedOnTime = BoolArgumentType.getBool(context, "bool");
-                                    mod.loopBasedOnTime = newLoopBasedOnTime;
-                                    mod.config.loopBasedOnTime = newLoopBasedOnTime;
+                                    boolean newLoopBasedOnTimeOfDay = BoolArgumentType.getBool(context, "bool");
+                                    mod.loopBasedOnTimeOfDay = newLoopBasedOnTimeOfDay;
+                                    mod.config.loopBasedOnTimeOfDay = newLoopBasedOnTimeOfDay;
                                     mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Looping based on time is set to: " + newLoopBasedOnTime));
-                                    LOGGER.info("Looping based on time set to {}", newLoopBasedOnTime);
+                                    context.getSource().sendMessage(Text.literal("Looping based on time of day is set to: " + newLoopBasedOnTimeOfDay));
+                                    LOGGER.info("Looping based on time of day set to {}", newLoopBasedOnTimeOfDay);
                                     return 1;
                                 })))
                 
@@ -109,7 +114,7 @@ public class Commands {
                                     return 1;
                                 })))
                 
-                .then(CommandManager.literal("setTime")
+                .then(CommandManager.literal("setTimeOfDay")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
                             context.getSource().sendMessage(Text.literal("Time is set to: " + mod.timeSetting));
@@ -151,10 +156,12 @@ public class Commands {
                             mod.config.timeOfDay = 0;
                             mod.timeSetting = 0;
                             mod.config.timeSetting = 0;
-                            mod.loopBasedOnTime = false;
-                            mod.config.loopBasedOnTime = false;
+                            mod.loopBasedOnTimeOfDay = false;
+                            mod.config.loopBasedOnTimeOfDay = false;
                             mod.loopOnSleep = false;
                             mod.config.loopOnSleep = false;
+                            mod.ticksLeft = mod.loopLength;
+                            mod.config.ticksLeft = mod.config.loopLength;
                             mod.executeCommand("mocap playback stop_all");
                             mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
                             mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));

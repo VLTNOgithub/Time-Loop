@@ -6,11 +6,9 @@ import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.entity.EntityType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +27,13 @@ public class TheLoop implements ModInitializer {
 	public int loopLength;
 	public long timeOfDay;
 	public long timeSetting;
-	public boolean loopBasedOnTime;
+	public boolean loopBasedOnTimeOfDay;
 	public boolean loopOnSleep;
 	public boolean isLooping;
 	public int maxLoops;
 	public String sceneName;
 	private int tickCounter = 0; // Tracks elapsed ticks
+	public int ticksLeft;
 	private List<String> recordingPlayers; // Add this field
 
 	// The configuration object loaded from disk
@@ -74,13 +73,15 @@ public class TheLoop implements ModInitializer {
 			isLooping = config.isLooping;
 			timeOfDay = config.timeOfDay;
 			timeSetting = config.timeSetting;
-			loopBasedOnTime = config.loopBasedOnTime;
+			loopBasedOnTimeOfDay = config.loopBasedOnTimeOfDay;
 			loopOnSleep = config.loopOnSleep;
+			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
 			
 			TheLoop.server = server;
 			this.serverWorld = server.getOverworld();
 			
+			executeCommand("mocap settings advanced experimental_release_warning false");
 			executeCommand("mocap settings playback start_as_recorded true");
 			executeCommand("mocap settings recording record_player_death false");
 			executeCommand("mocap settings playback play_entities @none");
@@ -128,11 +129,13 @@ public class TheLoop implements ModInitializer {
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (loopOnSleep) { return; }
-			if (loopBasedOnTime) { timeOfDay = serverWorld.getTimeOfDay(); };
+			if (loopBasedOnTimeOfDay) { timeOfDay = serverWorld.getTimeOfDay(); };
 			if (isLooping) {
 				tickCounter++;
-				if (tickCounter >= loopLength || ( timeOfDay == timeSetting && loopBasedOnTime ) ) {
+				ticksLeft = loopLength - tickCounter;
+				if (tickCounter >= loopLength || ( timeOfDay == timeSetting && loopBasedOnTimeOfDay) ) {
 					tickCounter = 0; // Reset counter
+					ticksLeft = loopLength; // Reset
 					runLoopIteration();
 				}
 			}
@@ -151,6 +154,7 @@ public class TheLoop implements ModInitializer {
 		timeOfDay = serverWorld.getTimeOfDay();
 		config.timeOfDay = timeOfDay;
 		tickCounter = 0;
+		ticksLeft = loopLength;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();
 	}
@@ -198,6 +202,7 @@ public class TheLoop implements ModInitializer {
 			saveRecordings();
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
+			ticksLeft = loopLength;
 			LOOP_LOGGER.debug("Loop stopped!");
 		}
 	}
