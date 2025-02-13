@@ -18,9 +18,9 @@ public class TimeLoopConfig {
     public int maxLoops = 0; //No limit by default
     public long timeSetting = 0;
     public long timeOfDay = 0;
-    public boolean loopBasedOnTimeOfDay;
-    public boolean loopOnSleep;
-    public boolean loopTimeOfDay;
+    public boolean loopBasedOnTimeOfDay = false;
+    public boolean loopOnSleep = false;
+    public boolean loopTimeOfDay = true;
     public int ticksLeft;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
