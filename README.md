@@ -29,7 +29,7 @@ Simply use commands to configure the loop.
 
 `/loop loopOnSleep` - Enables/disables looping when sleeping. **This overrides `loopBasedOnTimeOfDay` and `setLength`.**
 
-**Loop order**
+## Loop order
 `loopOnSleep` > `loopBasedOnTimeOfDay` > `setLength`
 
 # Support
