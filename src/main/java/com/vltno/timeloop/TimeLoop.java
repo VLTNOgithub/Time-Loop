@@ -31,8 +31,8 @@ public class TimeLoop implements ModInitializer {
 
 	// These fields will be initialized from the configuration file.
 	public int loopIteration;
-	public int loopTicks;
-	public long timeOfDay; // Tracks the time of day
+	public int loopLengthTicks;
+	public long startTimeOfDay; // The Time the Loop was started
 	public long timeSetting;
 	public boolean trackTimeOfDay;
 	public boolean isLooping;
@@ -84,9 +84,9 @@ public class TimeLoop implements ModInitializer {
 			config = TimeLoopConfig.load(worldFolder);
 
 			loopIteration = config.loopIteration;
-			loopTicks = config.loopTicks;
+			loopLengthTicks = config.loopLengthTicks;
 			isLooping = config.isLooping;
-			timeOfDay = config.timeOfDay;
+			startTimeOfDay = config.startTimeOfDay;
 			timeSetting = config.timeSetting;
 			trackTimeOfDay = config.trackTimeOfDay;
 			ticksLeft = config.ticksLeft;
@@ -100,7 +100,7 @@ public class TimeLoop implements ModInitializer {
 			this.serverWorld = server.getOverworld();
 
 			// Loop boss bar info
-			String loopInfo = (loopType == LoopTypes.TICKS ? "Ticks Left: " + loopTicks : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "");
+			String loopInfo = (loopType == LoopTypes.TICKS ? "Ticks Left: " + loopLengthTicks : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (startTimeOfDay - timeSetting) : "");
 			loopBossBar.visible(false);
 			loopBossBar.setBossBarName(loopInfo);
 
@@ -126,6 +126,7 @@ public class TimeLoop implements ModInitializer {
 
 				// Send message to all ops
 				for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+					LOOP_LOGGER.info("GRRRRRRRRRRRRRRRRRRRRRRRRRRR");
 					if (server.getPlayerManager().isOperator(player.getGameProfile())) {
 						player.sendMessage(Text.literal(("Use '/loop start' to start the Time loop!")));
 					}
@@ -178,9 +179,8 @@ public class TimeLoop implements ModInitializer {
 
 			if (isLooping) {
 				if (loopType == LoopTypes.TIME_OF_DAY) {
-					timeOfDay = serverWorld.getTimeOfDay();
-
-					long timeLeft = (timeOfDay > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(timeOfDay - timeSetting);
+					long time = serverWorld.getTimeOfDay();
+					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(startTimeOfDay - timeSetting);
 
 					if (showLoopInfo && isLooping) {
 						loopBossBar.setBossBarName("Time Left: " + timeLeft);
@@ -194,15 +194,15 @@ public class TimeLoop implements ModInitializer {
 
 				else if (loopType == LoopTypes.TICKS) {
 					tickCounter++;
-					ticksLeft = loopTicks - tickCounter;
+					ticksLeft = loopLengthTicks - tickCounter;
 					if (showLoopInfo && isLooping) {
 						loopBossBar.setBossBarName("Ticks Left: " + ticksLeft);
-						loopBossBar.setBossBarPercentage(loopTicks, tickCounter);
+						loopBossBar.setBossBarPercentage(loopLengthTicks, tickCounter);
 					}
 
-					if (tickCounter >= loopTicks) {
+					if (tickCounter >= loopLengthTicks) {
 						tickCounter = 0; // Reset counter
-						ticksLeft = loopTicks; // Reset
+						ticksLeft = loopLengthTicks; // Reset
 						runLoopIteration();
 					}
 				}
@@ -223,10 +223,10 @@ public class TimeLoop implements ModInitializer {
         if (showLoopInfo) {loopBossBar.visible(true);}
 		isLooping = true;
 		config.isLooping = true;
-		timeOfDay = serverWorld.getTimeOfDay();
-		config.timeOfDay = timeOfDay;
+		startTimeOfDay = serverWorld.getTimeOfDay();
+		config.startTimeOfDay = startTimeOfDay;
 		tickCounter = 0;
-		ticksLeft = loopTicks;
+		ticksLeft = loopLengthTicks;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();
 	}
@@ -235,11 +235,11 @@ public class TimeLoop implements ModInitializer {
 	 * Runs the next iteration of the loop.
 	 */
 	private void runLoopIteration() {
-		LOOP_LOGGER.info("Starting iteration {} of recording loop", loopIteration);
+		LOOP_LOGGER.info("Starting iteration {} of loop", loopIteration);
 		saveRecordings();
 		removeOldSceneEntries();
 		startRecordings();
-		if (trackTimeOfDay) { serverWorld.setTimeOfDay(timeOfDay); }
+		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
 		executeCommand("mocap playback stop_all including_others");
 		executeCommand(String.format("mocap playback start .%s", sceneName));
 		loopIteration++;
@@ -287,7 +287,7 @@ public class TimeLoop implements ModInitializer {
 			saveRecordings();
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
-			ticksLeft = loopTicks;
+			ticksLeft = loopLengthTicks;
 			LOOP_LOGGER.info("Loop stopped!");
 		}
 	}

@@ -83,14 +83,14 @@ public class Commands {
                         .then(CommandManager.literal("setTicks")
                                 .requires(source -> source.hasPermissionLevel(2))
                                 .executes(context -> {
-                                    context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + mod.loopTicks + " ticks"));
+                                    context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + mod.loopLengthTicks + " ticks"));
                                     return 1;
                                 })
                                 .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
                                         .executes(context -> {
                                             int newTicks = IntegerArgumentType.getInteger(context, "ticks");
-                                            mod.loopTicks = newTicks;
-                                            mod.config.loopTicks = newTicks;
+                                            mod.loopLengthTicks = newTicks;
+                                            mod.config.loopLengthTicks = newTicks;
 
                                             mod.ticksLeft = newTicks;
                                             mod.config.ticksLeft = newTicks;
@@ -202,14 +202,14 @@ public class Commands {
                         .executes(context -> {
                             mod.stopLoop();
                             
-                            mod.timeOfDay = 0;
-                            mod.config.timeOfDay = 0;
+                            mod.startTimeOfDay = 0;
+                            mod.config.startTimeOfDay = 0;
                             
                             mod.timeSetting = 0;
                             mod.config.timeSetting = 0;
                             
-                            mod.ticksLeft = mod.loopTicks;
-                            mod.config.ticksLeft = mod.config.loopTicks;
+                            mod.ticksLeft = mod.loopLengthTicks;
+                            mod.config.ticksLeft = mod.config.loopLengthTicks;
                             
                             mod.trackItems = false;
                             mod.config.trackItems = false;

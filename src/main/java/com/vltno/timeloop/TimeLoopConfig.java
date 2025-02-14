@@ -15,10 +15,10 @@ public class TimeLoopConfig {
     public boolean firstStart = true;
     public int loopIteration = 1;
     public boolean isLooping = false;
-    public int loopTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
+    public int loopLengthTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
     public int maxLoops = 0; //No limit by default
     public long timeSetting = 13000;
-    public long timeOfDay = 0;
+    public long startTimeOfDay = 0;
     public boolean trackTimeOfDay = true;
     public int ticksLeft;
 
