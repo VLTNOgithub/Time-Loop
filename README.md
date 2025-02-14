@@ -1,6 +1,6 @@
 # Time Loop
 A mod that 'loops' time by using the Motion Capture Mod.
-*Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi. Fixed by VLTNO.*
+*Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO.*
 
 # Installation
 **Requires Motion Capture 1.4 Alpha 6 and Minecraft 1.21.1**
