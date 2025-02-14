@@ -71,6 +71,10 @@ public class Commands {
                                 .then(CommandManager.argument("loopType", new LoopTypesArgumentType())
                                         .executes(context -> {
                                             LoopTypes newLoopType = LoopTypesArgumentType.getLoopType(context, "loopType");
+                                            mod.loopType = newLoopType;
+                                            mod.config.loopType = newLoopType;
+                                            mod.config.save();
+                                            
                                             context.getSource().sendMessage(Text.literal("Looping type is set to: " + newLoopType.asString()));
                                             LOGGER.info("Loop type set to {}", newLoopType.asString());
                                             return 1;
@@ -135,10 +139,10 @@ public class Commands {
                         
                         // TOGGLES
                         .then(CommandManager.literal("toggles")
-                                .then(CommandManager.literal("loopTimeOfDay")
+                                .then(CommandManager.literal("trackTimeOfDay")
                                         .requires(source -> source.hasPermissionLevel(2))
                                         .executes(context -> {
-                                            context.getSource().sendMessage(Text.literal("Looping time of day is set to: " + mod.trackTimeOfDay));
+                                            context.getSource().sendMessage(Text.literal("Tracking time of day is set to: " + mod.trackTimeOfDay));
                                             return 1;
                                         })
                                         .then(CommandManager.argument("value", BoolArgumentType.bool())
@@ -147,7 +151,7 @@ public class Commands {
                                                     mod.trackTimeOfDay = newTrackTimeOfDay;
                                                     mod.config.trackTimeOfDay = newTrackTimeOfDay;
                                                     mod.config.save();
-
+        
                                                     context.getSource().sendMessage(Text.literal("Tracking time of day is set to: " + newTrackTimeOfDay));
                                                     LOGGER.info("Tracking time of day set to {}", newTrackTimeOfDay);
                                                     return 1;
@@ -185,6 +189,8 @@ public class Commands {
                                                     mod.showLoopInfo = newShowLoopInfo;
                                                     mod.config.showLoopInfo = newShowLoopInfo;
                                                     mod.config.save();
+                                                    
+                                                    mod.loopBossBar.visible(newShowLoopInfo);
         
                                                     context.getSource().sendMessage(Text.literal("Showing loop info is set to: " + newShowLoopInfo));
                                                     LOGGER.info("Show loop info set to {}", newShowLoopInfo);

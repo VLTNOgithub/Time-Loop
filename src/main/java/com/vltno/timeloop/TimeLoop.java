@@ -23,9 +23,10 @@ import java.util.List;
 public class TimeLoop implements ModInitializer {
 	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
 	private Commands commands;
-	private LoopBossBar loopBossBar;
 	private static MinecraftServer server;
 	private ServerWorld serverWorld;
+
+	public LoopBossBar loopBossBar;
 
 	// These fields will be initialized from the configuration file.
 	public int loopIteration;
@@ -69,9 +70,8 @@ public class TimeLoop implements ModInitializer {
 		loopBossBar = new LoopBossBar();
 
 		EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
-			LOOP_LOGGER.info("Loop type: " + loopType);
 			if (entity.isPlayer() && (loopType == LoopTypes.SLEEP) ) {
-				LOOP_LOGGER.info("PLAYER SLEPT, LOOPING");
+				LOOP_LOGGER.info("Player slept, looping.");
 				runLoopIteration();
 			}
 		});
@@ -98,9 +98,9 @@ public class TimeLoop implements ModInitializer {
 			TimeLoop.server = server;
 			this.serverWorld = server.getOverworld();
 
-			// loop bossbar info
+			// Loop boss bar info
 			String loopInfo = (loopType == LoopTypes.TICKS ? "Ticks Left: " + loopTicks : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "");
-			loopBossBar.visible(showLoopInfo);
+			loopBossBar.visible(false);
 			loopBossBar.setBossBarName(loopInfo);
 
 			// set mocap settings
@@ -163,19 +163,43 @@ public class TimeLoop implements ModInitializer {
 		
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (loopType == LoopTypes.SLEEP || loopType == LoopTypes.DEATH) { return; }
-			if (loopType == LoopTypes.TIME_OF_DAY) { timeOfDay = serverWorld.getTimeOfDay(); };
+			
 			if (isLooping) {
-				tickCounter++;
-				ticksLeft = loopTicks - tickCounter;
-				loopBossBar.visible(showLoopInfo);
-				if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
-					loopBossBar.setBossBarName(loopType == LoopTypes.TICKS ? "Ticks Left: " + ticksLeft : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "");
-					loopBossBar.setBossBarPercentage(loopTicks, tickCounter);
+				if (loopType == LoopTypes.TIME_OF_DAY) {
+					LOOP_LOGGER.info("TimeOfDay: {}", serverWorld.getTimeOfDay());
+					timeOfDay = serverWorld.getTimeOfDay();
+					
+					long timeLeft = (timeOfDay > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(timeOfDay - timeSetting);
+					
+					LOOP_LOGGER.info("Time Left: {}", timeLeft);
+					
+					LOOP_LOGGER.info("Time setting: {}", timeSetting);
+					
+					LOOP_LOGGER.info("Time setting - timeleft: {}", timeSetting - timeLeft);
+					
+					if (showLoopInfo) {
+						loopBossBar.setBossBarName("Time Left: " + timeLeft);
+						loopBossBar.setBossBarPercentage((int)timeSetting, (int)(timeSetting - timeLeft));
+					}
+					
+					if (timeSetting - timeLeft == timeSetting) {
+						runLoopIteration();
+					}
 				}
-				if (tickCounter >= loopTicks || ( timeOfDay == timeSetting && (loopType == LoopTypes.TIME_OF_DAY)) ) {
-					tickCounter = 0; // Reset counter
-					ticksLeft = loopTicks; // Reset
-					runLoopIteration();
+				
+				else if (loopType == LoopTypes.TICKS) {
+					tickCounter++;
+					ticksLeft = loopTicks - tickCounter;
+					if (showLoopInfo) {
+						loopBossBar.setBossBarName("Ticks Left: " + ticksLeft);
+						loopBossBar.setBossBarPercentage(loopTicks, tickCounter);
+					}
+
+					if (tickCounter >= loopTicks) {
+						tickCounter = 0; // Reset counter
+						ticksLeft = loopTicks; // Reset
+						runLoopIteration();
+					}
 				}
 			}
 		});
