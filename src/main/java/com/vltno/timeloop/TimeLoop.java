@@ -133,8 +133,6 @@ public class TimeLoop implements ModInitializer {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
 			
-			if (showLoopInfo) { executeCommand(String.format("bossbar set minecraft:loop_info players %s", playerName)); }
-			
 			recordingPlayers.add(playerName); // Add to recording list
 			if (isLooping) {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
@@ -168,7 +166,7 @@ public class TimeLoop implements ModInitializer {
 			if (isLooping) {
 				tickCounter++;
 				ticksLeft = loopTicks - tickCounter;
-				if (showLoopInfo) {
+				if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
 					executeCommand(String.format("bossbar set loop_info value %s", ticksLeft));
 					executeCommand(String.format("bossbar set loop_info name \"%s\"", (loopType == LoopTypes.TICKS ? "Ticks Left: " + ticksLeft : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "")));
 				}
@@ -191,7 +189,7 @@ public class TimeLoop implements ModInitializer {
 			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
 		}
-		if (showLoopInfo) {
+		if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
 			executeCommand("bossbar set minecraft:loop_info visible false");
 			executeCommand("bossbar set minecraft:loop_info players @a");
 		}
@@ -254,7 +252,7 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void stopLoop() {
 		if (isLooping) {
-			if (showLoopInfo) { executeCommand("bossbar set minecraft:loop_info visible false"); }
+			if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) { executeCommand("bossbar set minecraft:loop_info visible false"); }
 			LOOP_LOGGER.info("Stopping loop");
 			isLooping = false;
 			config.isLooping = false;
