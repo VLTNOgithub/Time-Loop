@@ -18,10 +18,10 @@ public class TimeLoopConfig {
     public int maxLoops = 0; //No limit by default
     public long timeSetting = 13000;
     public long timeOfDay = 0;
-    public boolean loopTimeOfDay = true;
+    public boolean trackTimeOfDay = true;
     public int ticksLeft;
     
-    public boolean showLoopInfo = false;
+    public boolean showLoopInfo = true;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
 

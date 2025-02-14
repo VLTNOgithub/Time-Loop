@@ -135,21 +135,21 @@ public class Commands {
                         
                         // TOGGLES
                         .then(CommandManager.literal("toggles")
-                                .then(CommandManager.literal("loopTimeOfDay")
+                                .then(CommandManager.literal("trackTimeOfDay")
                                         .requires(source -> source.hasPermissionLevel(2))
                                         .executes(context -> {
-                                            context.getSource().sendMessage(Text.literal("Looping time of day is set to: " + mod.loopTimeOfDay));
+                                            context.getSource().sendMessage(Text.literal("Tracking time of day is set to: " + mod.trackTimeOfDay));
                                             return 1;
                                         })
                                         .then(CommandManager.argument("value", BoolArgumentType.bool())
                                                 .executes(context -> {
-                                                    boolean newLoopTimeOfDay = BoolArgumentType.getBool(context, "value");
-                                                    mod.loopTimeOfDay = newLoopTimeOfDay;
-                                                    mod.config.loopTimeOfDay = newLoopTimeOfDay;
+                                                    boolean newTrackTimeOfDay = BoolArgumentType.getBool(context, "value");
+                                                    mod.trackTimeOfDay = newTrackTimeOfDay;
+                                                    mod.config.trackTimeOfDay = newTrackTimeOfDay;
                                                     mod.config.save();
         
-                                                    context.getSource().sendMessage(Text.literal("Looping time of day is set to: " + newLoopTimeOfDay));
-                                                    LOGGER.info("Looping time of day set to {}", newLoopTimeOfDay);
+                                                    context.getSource().sendMessage(Text.literal("Tracking time of day is set to: " + newTrackTimeOfDay));
+                                                    LOGGER.info("Tracking time of day set to {}", newTrackTimeOfDay);
                                                     return 1;
                                                 })))
 

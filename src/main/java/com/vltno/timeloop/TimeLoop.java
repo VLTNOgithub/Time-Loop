@@ -31,7 +31,7 @@ public class TimeLoop implements ModInitializer {
 	public int loopTicks;
 	public long timeOfDay; // Tracks the time of day
 	public long timeSetting;
-	public boolean loopTimeOfDay;
+	public boolean trackTimeOfDay;
 	public boolean isLooping;
 	public int maxLoops;
 	public String sceneName;
@@ -83,7 +83,7 @@ public class TimeLoop implements ModInitializer {
 			isLooping = config.isLooping;
 			timeOfDay = config.timeOfDay;
 			timeSetting = config.timeSetting;
-			loopTimeOfDay = config.loopTimeOfDay;
+			trackTimeOfDay = config.trackTimeOfDay;
 			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
 			
@@ -213,7 +213,7 @@ public class TimeLoop implements ModInitializer {
 		saveRecordings();
 		removeOldSceneEntries();
 		startRecordings();
-		if ( loopTimeOfDay ) { serverWorld.setTimeOfDay(timeOfDay); }
+		if (trackTimeOfDay) { serverWorld.setTimeOfDay(timeOfDay); }
 		executeCommand("mocap playback stop_all including_others");
 		executeCommand(String.format("mocap playback start .%s", sceneName));
 		loopIteration++;
