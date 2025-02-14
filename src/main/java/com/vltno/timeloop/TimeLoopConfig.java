@@ -16,11 +16,12 @@ public class TimeLoopConfig {
     public boolean isLooping = false;
     public int loopTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
     public int maxLoops = 0; //No limit by default
-    public long timeSetting = 0;
+    public long timeSetting = 13000;
     public long timeOfDay = 0;
     public boolean loopTimeOfDay = true;
     public int ticksLeft;
     
+    public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

@@ -29,16 +29,17 @@ public class TimeLoop implements ModInitializer {
 	// These fields will be initialized from the configuration file.
 	public int loopIteration;
 	public int loopTicks;
-	public long timeOfDay;
+	public long timeOfDay; // Tracks the time of day
 	public long timeSetting;
 	public boolean loopTimeOfDay;
-	public boolean isLooping = false;
+	public boolean isLooping;
 	public int maxLoops;
 	public String sceneName;
 	private int tickCounter = 0; // Tracks elapsed ticks
 	public int ticksLeft;
 	private List<String> recordingPlayers; // Add this field
 	
+	public boolean trackItems;
 	public LoopTypes loopType;
 
 	// The configuration object loaded from disk
@@ -85,6 +86,7 @@ public class TimeLoop implements ModInitializer {
 			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
 			
+			trackItems = config.trackItems;
 			loopType = config.loopType;
 			
 			TimeLoop.server = server;
@@ -93,7 +95,11 @@ public class TimeLoop implements ModInitializer {
 			executeCommand("mocap settings advanced experimental_release_warning false");
 			executeCommand("mocap settings playback start_as_recorded true");
 			executeCommand("mocap settings recording record_player_death false");
-			executeCommand("mocap settings playback play_entities @none");
+			
+			executeCommand("mocap settings recording entity_tracking_distance 1");
+			
+			updateEntitiesToTrack(trackItems);
+			
 			executeCommand(String.format("mocap scenes add %s", sceneName));
 			if (config.isLooping) {
 				LOOP_LOGGER.info("Loop was active in config, automatically restarting loop.");
@@ -253,9 +259,11 @@ public class TimeLoop implements ModInitializer {
 	}
 
 	/**
-	 * Checks if a recording exists.
-	 * @param recordingName The name of the recording to check.
-	 * @return True if the file exists. False if it doesn't.
+	 * Checks if a recording file with the specified name exists in the predefined recordings directory.
+	 * The method returns a boolean indicating the existence of the file.
+	 *
+	 * @param recordingName The name of the recording file to check, without the file extension.
+	 * @return true if the recording file exists, false otherwise.
 	 */
 	private boolean recordingFileExists(String recordingName) {
 		// Build the complete path for the recording directory using the absolute world path
@@ -270,7 +278,11 @@ public class TimeLoop implements ModInitializer {
 	}
 
 	/**
-	 * Removes old scene entries to keep within the bounds of maxLoops.
+	 * Removes outdated entries from the scene file to ensure the number of subscenes does not exceed the maximum allowed loops.
+	 *
+	 * The method checks if there are more recorded subscenes in the scene file than the value specified by maxLoops. If so, 
+	 * it removes the oldest entries to maintain the desired number. The updated data is then saved back to the file.
+	 *
 	 */
 	private void removeOldSceneEntries() {
 		if (isLooping) {
@@ -312,6 +324,20 @@ public class TimeLoop implements ModInitializer {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Updates the entities to be tracked for recording and playback settings.
+	 * This method modifies the entities being tracked based on the specified parameter,
+	 * enabling or disabling item tracking.
+	 *
+	 * @param items A boolean value. If true, includes items in the tracking list. 
+	 *              If false, excludes items and tracks only vehicles.
+	 */
+	public void updateEntitiesToTrack(boolean items) {
+		String entitiesToTrack = "@vehicles" + (items ? ";@items" : "");
+		executeCommand(String.format("mocap settings playback record_entities %s", entitiesToTrack));
+		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
 	}
 }
 
