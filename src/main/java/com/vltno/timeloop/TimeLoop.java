@@ -12,6 +12,7 @@ import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
@@ -119,6 +120,17 @@ public class TimeLoop implements ModInitializer {
 				executeCommand(String.format("mocap playback start .%s", sceneName));
 				startLoop();
 			}
+			if (config.firstStart) {
+				config.firstStart = false;
+				config.save();
+
+				// Send message to all ops
+				for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+					if (server.getPlayerManager().isOperator(player.getGameProfile())) {
+						player.sendMessage(Text.literal(("Use '/loop start' to start the Time loop!")));
+					}
+				}
+			}
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -163,34 +175,27 @@ public class TimeLoop implements ModInitializer {
 		
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (loopType == LoopTypes.SLEEP || loopType == LoopTypes.DEATH) { return; }
-			
+
 			if (isLooping) {
 				if (loopType == LoopTypes.TIME_OF_DAY) {
-					LOOP_LOGGER.info("TimeOfDay: {}", serverWorld.getTimeOfDay());
 					timeOfDay = serverWorld.getTimeOfDay();
-					
+
 					long timeLeft = (timeOfDay > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(timeOfDay - timeSetting);
-					
-					LOOP_LOGGER.info("Time Left: {}", timeLeft);
-					
-					LOOP_LOGGER.info("Time setting: {}", timeSetting);
-					
-					LOOP_LOGGER.info("Time setting - timeleft: {}", timeSetting - timeLeft);
-					
-					if (showLoopInfo) {
+
+					if (showLoopInfo && isLooping) {
 						loopBossBar.setBossBarName("Time Left: " + timeLeft);
 						loopBossBar.setBossBarPercentage((int)timeSetting, (int)(timeSetting - timeLeft));
 					}
-					
+
 					if (timeSetting - timeLeft == timeSetting) {
 						runLoopIteration();
 					}
 				}
-				
+
 				else if (loopType == LoopTypes.TICKS) {
 					tickCounter++;
 					ticksLeft = loopTicks - tickCounter;
-					if (showLoopInfo) {
+					if (showLoopInfo && isLooping) {
 						loopBossBar.setBossBarName("Ticks Left: " + ticksLeft);
 						loopBossBar.setBossBarPercentage(loopTicks, tickCounter);
 					}
@@ -215,9 +220,7 @@ public class TimeLoop implements ModInitializer {
 			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
 		}
-		if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
-			loopBossBar.visible(true);
-		}
+        if (showLoopInfo) {loopBossBar.visible(true);}
 		isLooping = true;
 		config.isLooping = true;
 		timeOfDay = serverWorld.getTimeOfDay();
@@ -277,10 +280,10 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void stopLoop() {
 		if (isLooping) {
-			if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) { loopBossBar.visible(true); }
 			LOOP_LOGGER.info("Stopping loop");
 			isLooping = false;
 			config.isLooping = false;
+			loopBossBar.visible(false);
 			saveRecordings();
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;

@@ -12,6 +12,7 @@ import java.nio.file.Path;
 public class TimeLoopConfig {
     // These values will be loaded/saved from/to the JSON config file.
     public String sceneName = "loop_scene";
+    public boolean firstStart = true;
     public int loopIteration = 1;
     public boolean isLooping = false;
     public int loopTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
