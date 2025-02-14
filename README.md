@@ -17,20 +17,23 @@ Simply use commands to configure the loop.
 
 `/loop reset` - Reset the loop and go back to the first recording. **This doesn't delete the recordings as of yet but it's being worked on.**
 
-`/loop setLength 6000` - Set the duration / length of the loop. The unit is ticks (6000 ticks is 5 mins).
-
 `/loop status` - Shows the status of the loop in chat.
 
-`/loop maxLoops 0` - Sets the maximum amount of loops. 0 is infinite.
+`/loop maxLoops [0]` - Sets the maximum amount of loops. 0 is infinite.
 
-`/loop loopBasedOnTimeOfDay` - Enables/disables looping based on the time of day. **This overrides `setLength`.**
+`/loop setTicks [6000]` - Set the duration / length of the loop. The unit is ticks (6000 ticks is 5 mins).
 
-`/loop setTimeOfDay` - Sets the time of day to loop at (same as minecraft so 13000 is night).
+`/loop setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
 
-`/loop loopOnSleep` - Enables/disables looping when sleeping. **This overrides `loopBasedOnTimeOfDay` and `setLength`.**
+`/loop trackItems [false]` - Sets tracking items during loops.
 
-## Loop order
-`loopOnSleep` > `loopBasedOnTimeOfDay` > `setLength`
+`/loop loopType [TICK]` - Sets the type of loop.
+
+# LoopType Options
+- `TICK` (Loops every `setTicks` ticks)
+- `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
+- `SLEEP` (Loops when you sleep)
+- `DEATH` (Loops when you die)
 
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
