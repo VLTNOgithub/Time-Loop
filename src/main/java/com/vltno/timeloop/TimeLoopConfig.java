@@ -21,6 +21,7 @@ public class TimeLoopConfig {
     public boolean loopTimeOfDay = true;
     public int ticksLeft;
     
+    public boolean showLoopInfo = false;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
 

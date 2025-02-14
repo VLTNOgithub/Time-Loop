@@ -92,6 +92,8 @@ public class Commands {
                                             mod.config.ticksLeft = newTicks;
 
                                             mod.config.save();
+                                            
+                                            mod.executeCommand(String.format("bossbar set minecraft:loop_info max %s", newTicks));
                                             context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + newTicks + " ticks"));
                                             LOGGER.info("Loop ticks set to {} ticks", newTicks);
                                             return 1;
@@ -168,6 +170,26 @@ public class Commands {
         
                                                     context.getSource().sendMessage(Text.literal("Tracking items is set to: " + newTrackItems));
                                                     LOGGER.info("Tracking items set to {}", newTrackItems);
+                                                    return 1;
+                                                })))
+                                
+                                .then(CommandManager.literal("showLoopInfo")
+                                        .requires(source -> source.hasPermissionLevel(2))
+                                        .executes(context -> {
+                                            context.getSource().sendMessage(Text.literal("Show loop info is set to: " + mod.showLoopInfo));
+                                            return 1;
+                                        })
+                                        .then(CommandManager.argument("value", BoolArgumentType.bool())
+                                                .executes(context -> {
+                                                    boolean newShowLoopInfo = BoolArgumentType.getBool(context, "value");
+                                                    mod.showLoopInfo = newShowLoopInfo;
+                                                    mod.config.showLoopInfo = newShowLoopInfo;
+                                                    mod.config.save();
+
+                                                    mod.executeCommand(String.format("bossbar set minecraft:loop_info visible %b", newShowLoopInfo));
+        
+                                                    context.getSource().sendMessage(Text.literal("Showing loop info is set to: " + newShowLoopInfo));
+                                                    LOGGER.info("Show loop info set to {}", newShowLoopInfo);
                                                     return 1;
                                                 })))))
 
