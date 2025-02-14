@@ -21,7 +21,7 @@ Simply use commands to configure the loop.
 
 `/loop maxLoops [0]` - Sets the maximum amount of loops. 0 is infinite.
 
-`/loop setTicks [6000]` - Set the duration / length of the loop. The unit is ticks (6000 ticks is 5 mins).
+`/loop setTicks [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
 
 `/loop setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
 
