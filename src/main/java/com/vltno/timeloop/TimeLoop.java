@@ -1,15 +1,18 @@
 package com.vltno.timeloop;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,19 +28,18 @@ public class TimeLoop implements ModInitializer {
 
 	// These fields will be initialized from the configuration file.
 	public int loopIteration;
-	public int loopLength;
+	public int loopTicks;
 	public long timeOfDay;
 	public long timeSetting;
-	public boolean loopBasedOnTimeOfDay;
-	public boolean loopOnSleep;
-	public boolean loopOnDeath;
 	public boolean loopTimeOfDay;
-	public boolean isLooping;
+	public boolean isLooping = false;
 	public int maxLoops;
 	public String sceneName;
 	private int tickCounter = 0; // Tracks elapsed ticks
 	public int ticksLeft;
 	private List<String> recordingPlayers; // Add this field
+	
+	public LoopTypes loopType;
 
 	// The configuration object loaded from disk
 	public TimeLoopConfig config;
@@ -50,6 +52,9 @@ public class TimeLoop implements ModInitializer {
 	public void onInitialize() {
 		LOOP_LOGGER.info("Initializing TimeLoop mod");
 		recordingPlayers = new ArrayList<>(); // Initialize the list
+		
+		// Register the custom ArgumentType
+		ArgumentTypeRegistry.registerArgumentType(Identifier.of("timeloop",""), LoopTypesArgumentType.class, ConstantArgumentSerializer.of(LoopTypesArgumentType::new));
 
 		// Register commands
 		commands = new Commands(this);
@@ -58,8 +63,8 @@ public class TimeLoop implements ModInitializer {
 		);
 
 		EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
-			LOOP_LOGGER.info("Loop on sleep: " + loopOnSleep);
-			if (entity.isPlayer() && loopOnSleep) {
+			LOOP_LOGGER.info("Loop type: " + loopType);
+			if (entity.isPlayer() && (loopType == LoopTypes.SLEEP) ) {
 				LOOP_LOGGER.info("PLAYER SLEPT, LOOPING");
 				runLoopIteration();
 			}
@@ -72,16 +77,15 @@ public class TimeLoop implements ModInitializer {
 			config = TimeLoopConfig.load(worldFolder);
 
 			loopIteration = config.loopIteration;
-			loopLength = config.loopLength;
+			loopTicks = config.loopTicks;
 			isLooping = config.isLooping;
 			timeOfDay = config.timeOfDay;
 			timeSetting = config.timeSetting;
-			loopBasedOnTimeOfDay = config.loopBasedOnTimeOfDay;
-			loopOnSleep = config.loopOnSleep;
-			loopOnDeath = config.loopOnDeath;
 			loopTimeOfDay = config.loopTimeOfDay;
 			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
+			
+			loopType = config.loopType;
 			
 			TimeLoop.server = server;
 			this.serverWorld = server.getOverworld();
@@ -133,19 +137,19 @@ public class TimeLoop implements ModInitializer {
 		});
 
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-			if (!loopOnDeath) { return; }
+			if (loopType != LoopTypes.DEATH) { return; }
 			runLoopIteration();
 		});
 		
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			if (loopOnSleep || loopOnDeath) { return; }
-			if (loopBasedOnTimeOfDay) { timeOfDay = serverWorld.getTimeOfDay(); };
+			if (loopType == LoopTypes.SLEEP || loopType == LoopTypes.DEATH) { return; }
+			if (loopType == LoopTypes.TIME_OF_DAY) { timeOfDay = serverWorld.getTimeOfDay(); };
 			if (isLooping) {
 				tickCounter++;
-				ticksLeft = loopLength - tickCounter;
-				if (tickCounter >= loopLength || ( timeOfDay == timeSetting && loopBasedOnTimeOfDay) ) {
+				ticksLeft = loopTicks - tickCounter;
+				if (tickCounter >= loopTicks || ( timeOfDay == timeSetting && (loopType == LoopTypes.TIME_OF_DAY)) ) {
 					tickCounter = 0; // Reset counter
-					ticksLeft = loopLength; // Reset
+					ticksLeft = loopTicks; // Reset
 					runLoopIteration();
 				}
 			}
@@ -167,7 +171,7 @@ public class TimeLoop implements ModInitializer {
 		timeOfDay = serverWorld.getTimeOfDay();
 		config.timeOfDay = timeOfDay;
 		tickCounter = 0;
-		ticksLeft = loopLength;
+		ticksLeft = loopTicks;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();
 	}
@@ -227,7 +231,7 @@ public class TimeLoop implements ModInitializer {
 			saveRecordings();
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
-			ticksLeft = loopLength;
+			ticksLeft = loopTicks;
 			LOOP_LOGGER.info("Loop stopped!");
 		}
 	}

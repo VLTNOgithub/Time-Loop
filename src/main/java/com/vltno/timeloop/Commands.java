@@ -1,7 +1,6 @@
 package com.vltno.timeloop;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.CommandManager;
@@ -17,7 +16,7 @@ public class Commands {
     public Commands(TimeLoop mod) {
         this.mod = mod;
     }
-
+    
     public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(CommandManager.literal("loop")
                 .then(CommandManager.literal("start")
@@ -39,7 +38,7 @@ public class Commands {
                             if (mod.isLooping) {
                                 mod.stopLoop();
                                 context.getSource().sendMessage(Text.literal("Loop stopped"));
-                                LOGGER.info("loop stopped");
+                                LOGGER.info("Loop stopped");
                                 return 1;
                             }
                             else {
@@ -50,7 +49,7 @@ public class Commands {
 
                 .then(CommandManager.literal("status")
                         .executes(context -> {
-                            String extras = mod.loopOnDeath ? "Looping on death." : mod.loopOnSleep ? "Looping on sleep." : mod.loopBasedOnTimeOfDay ? " Time of day: " + mod.timeOfDay : " Ticks Left: " + mod.ticksLeft;
+                            String extras = " Looping on " + mod.loopType.asString() + (mod.isLooping ? ". Ticks Left: " + mod.ticksLeft : "");
                             String status = mod.isLooping ?
                                     "Loop is active. Current iteration: " + mod.loopIteration + extras:
                                     "Loop is inactive. Last iteration: " + mod.loopIteration + extras;
@@ -59,92 +58,38 @@ public class Commands {
                             return 1;
                         }))
 
-                .then(CommandManager.literal("setLength")
+                .then(CommandManager.literal("setLoopType")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Loop length is set to: " + mod.loopLength + " ticks"));
+                            context.getSource().sendMessage(Text.literal("Loop type is set to: " + mod.loopType.asString()));
+                            return 1;
+                        })
+                        .then(CommandManager.argument("enum", new LoopTypesArgumentType())
+                                .executes(context -> {
+                                    LoopTypes newLoopType = context.getArgument("enum", LoopTypes.class);
+                                    context.getSource().sendMessage(Text.literal("Looping type is set to: " + newLoopType.asString()));
+                                    LOGGER.info("Loop type set to {}", newLoopType.asString());
+                                    return 1;
+                                })))
+                
+                .then(CommandManager.literal("setTicks")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .executes(context -> {
+                            context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + mod.loopTicks + " ticks"));
                             return 1;
                         })
                         .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
                                 .executes(context -> {
-                                    int newLength = IntegerArgumentType.getInteger(context, "ticks");
-                                    mod.loopLength = newLength;
-                                    mod.config.loopLength = newLength;
+                                    int newTicks = IntegerArgumentType.getInteger(context, "ticks");
+                                    mod.loopTicks = newTicks;
+                                    mod.config.loopTicks = newTicks;
                                     
-                                    mod.ticksLeft = newLength;
-                                    mod.config.ticksLeft = newLength;
+                                    mod.ticksLeft = newTicks;
+                                    mod.config.ticksLeft = newTicks;
                                     
                                     mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Loop length is set to: " + newLength + " ticks"));
-                                    LOGGER.info("Loop length set to {} ticks", newLength);
-                                    return 1;
-                                })))
-
-                .then(CommandManager.literal("loopBasedOnTimeOfDay")
-                        .requires(source -> source.hasPermissionLevel(2))
-                        .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping based on time of day is set to: " + mod.loopBasedOnTimeOfDay));
-                            return 1;
-                        })
-                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
-                                .executes(context -> {
-                                    boolean newLoopBasedOnTimeOfDay = BoolArgumentType.getBool(context, "bool");
-                                    mod.loopBasedOnTimeOfDay = newLoopBasedOnTimeOfDay;
-                                    mod.config.loopBasedOnTimeOfDay = newLoopBasedOnTimeOfDay;
-                                    mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Looping based on time of day is set to: " + newLoopBasedOnTimeOfDay));
-                                    LOGGER.info("Looping based on time of day set to {}", newLoopBasedOnTimeOfDay);
-                                    return 1;
-                                })))
-                
-                .then(CommandManager.literal("loopOnSleep")
-                        .requires(source -> source.hasPermissionLevel(2))
-                        .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + mod.loopOnSleep));
-                            return 1;
-                        })
-                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
-                                .executes(context -> {
-                                    boolean newLoopOnSleep = BoolArgumentType.getBool(context, "bool");
-                                    mod.loopOnSleep = newLoopOnSleep;
-                                    mod.config.loopOnSleep = newLoopOnSleep;
-                                    mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + newLoopOnSleep));
-                                    LOGGER.info("Looping on sleep set to {}", newLoopOnSleep);
-                                    return 1;
-                                })))
-                
-                .then(CommandManager.literal("loopOnDeath")
-                        .requires(source -> source.hasPermissionLevel(2))
-                        .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping on death is set to: " + mod.loopOnDeath));
-                            return 1;
-                        })
-                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
-                                .executes(context -> {
-                                    boolean newLoopOnDeath = BoolArgumentType.getBool(context, "bool");
-                                    mod.loopOnDeath = newLoopOnDeath;
-                                    mod.config.loopOnDeath = newLoopOnDeath;
-                                    mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Looping on death is set to: " + newLoopOnDeath));
-                                    LOGGER.info("Looping on death set to {}", newLoopOnDeath);
-                                    return 1;
-                                })))
-
-                .then(CommandManager.literal("loopTimeOfDay")
-                        .requires(source -> source.hasPermissionLevel(2))
-                        .executes(context -> {
-                            context.getSource().sendMessage(Text.literal("Looping the time of day is set to: " + mod.loopOnSleep));
-                            return 1;
-                        })
-                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
-                                .executes(context -> {
-                                    boolean newLoopTimeOfDay = BoolArgumentType.getBool(context, "bool");
-                                    mod.loopTimeOfDay = newLoopTimeOfDay;
-                                    mod.config.loopTimeOfDay = newLoopTimeOfDay;
-                                    mod.config.save();
-                                    context.getSource().sendMessage(Text.literal("Looping the time of day is set to: " + newLoopTimeOfDay));
-                                    LOGGER.info("Looping the time of day set to {}", newLoopTimeOfDay);
+                                    context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + newTicks + " ticks"));
+                                    LOGGER.info("Loop ticks set to {} ticks", newTicks);
                                     return 1;
                                 })))
                 
@@ -190,14 +135,10 @@ public class Commands {
                             mod.config.timeOfDay = 0;
                             mod.timeSetting = 0;
                             mod.config.timeSetting = 0;
-                            mod.loopBasedOnTimeOfDay = false;
-                            mod.config.loopBasedOnTimeOfDay = false;
-                            mod.loopOnSleep = false;
-                            mod.config.loopOnSleep = false;
-                            mod.loopOnDeath = false;
-                            mod.config.loopOnDeath = false;
-                            mod.ticksLeft = mod.loopLength;
-                            mod.config.ticksLeft = mod.config.loopLength;
+                            mod.ticksLeft = mod.loopTicks;
+                            mod.config.ticksLeft = mod.config.loopTicks;
+                            mod.loopType = LoopTypes.TICKS;
+                            mod.config.loopType = LoopTypes.TICKS;
                             mod.executeCommand("mocap playback stop_all");
                             mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
                             mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));

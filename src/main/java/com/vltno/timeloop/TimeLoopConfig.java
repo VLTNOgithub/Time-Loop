@@ -14,15 +14,14 @@ public class TimeLoopConfig {
     public String sceneName = "loop_scene";
     public int loopIteration = 1;
     public boolean isLooping = false;
-    public int loopLength = 6000; // Default: 6000 ticks (i.e. 5 minutes)
+    public int loopTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
     public int maxLoops = 0; //No limit by default
     public long timeSetting = 0;
     public long timeOfDay = 0;
-    public boolean loopBasedOnTimeOfDay = false;
-    public boolean loopOnSleep = false;
-    public boolean loopOnDeath = false;
     public boolean loopTimeOfDay = true;
     public int ticksLeft;
+    
+    public LoopTypes loopType = LoopTypes.TICKS;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;
