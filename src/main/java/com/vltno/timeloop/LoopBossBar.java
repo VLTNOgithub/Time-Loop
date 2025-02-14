@@ -26,7 +26,7 @@ public class LoopBossBar {
     }
 
     public void setBossBarPercentage(int whole, int part) {
-        bossBar.setPercent((float) part / whole * 100);
+        bossBar.setPercent(1.0f - ((float) part / whole));
     }
 
     public void addPlayer(ServerPlayerEntity player) {

@@ -138,7 +138,7 @@ public class Commands {
                                 .then(CommandManager.literal("loopTimeOfDay")
                                         .requires(source -> source.hasPermissionLevel(2))
                                         .executes(context -> {
-                                            context.getSource().sendMessage(Text.literal("Looping time of day is set to: " + mod.loopTimeOfDay));
+                                            context.getSource().sendMessage(Text.literal("Looping time of day is set to: " + mod.trackTimeOfDay));
                                             return 1;
                                         })
                                         .then(CommandManager.argument("value", BoolArgumentType.bool())

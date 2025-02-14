@@ -167,12 +167,10 @@ public class TimeLoop implements ModInitializer {
 			if (isLooping) {
 				tickCounter++;
 				ticksLeft = loopTicks - tickCounter;
+				loopBossBar.visible(showLoopInfo);
 				if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
 					loopBossBar.setBossBarName(loopType == LoopTypes.TICKS ? "Ticks Left: " + ticksLeft : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "");
 					loopBossBar.setBossBarPercentage(loopTicks, tickCounter);
-				}
-				if (!showLoopInfo) {
-					loopBossBar.visible(false);
 				}
 				if (tickCounter >= loopTicks || ( timeOfDay == timeSetting && (loopType == LoopTypes.TIME_OF_DAY)) ) {
 					tickCounter = 0; // Reset counter
