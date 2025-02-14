@@ -391,9 +391,8 @@ public class TimeLoop implements ModInitializer {
 	}
 }
 
-// use this instead is the future
-// mocap playback stop_all including_others
-// mocap playback start -_._._
+// use this in the future
+// mocap playback start -_._._   starts pending recordings (results in a smoother experience)
 
 // need to store the amount of playbacks stated for each player to make maxLoops work with this
 // mocap playback stop 009--LuigiByte.LuigiByte.1
