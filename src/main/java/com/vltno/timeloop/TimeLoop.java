@@ -23,6 +23,7 @@ import java.util.List;
 public class TimeLoop implements ModInitializer {
 	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
 	private Commands commands;
+	private LoopBossBar loopBossBar;
 	private static MinecraftServer server;
 	private ServerWorld serverWorld;
 
@@ -38,7 +39,7 @@ public class TimeLoop implements ModInitializer {
 	private int tickCounter = 0; // Tracks elapsed ticks
 	public int ticksLeft;
 	private List<String> recordingPlayers; // Add this field
-	
+
 	public boolean showLoopInfo;
 	public boolean trackItems;
 	public LoopTypes loopType;
@@ -54,7 +55,7 @@ public class TimeLoop implements ModInitializer {
 	public void onInitialize() {
 		LOOP_LOGGER.info("Initializing TimeLoop mod");
 		recordingPlayers = new ArrayList<>(); // Initialize the list
-		
+
 		// Register the custom ArgumentType
 		ArgumentTypeRegistry.registerArgumentType(Identifier.of("timeloop",""), LoopTypesArgumentType.class, ConstantArgumentSerializer.of(LoopTypesArgumentType::new));
 
@@ -63,6 +64,9 @@ public class TimeLoop implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
 				commands.register(dispatcher, registryAccess, environment)
 		);
+
+		// BossBar
+		loopBossBar = new LoopBossBar();
 
 		EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
 			LOOP_LOGGER.info("Loop type: " + loopType);
@@ -93,21 +97,16 @@ public class TimeLoop implements ModInitializer {
 			
 			TimeLoop.server = server;
 			this.serverWorld = server.getOverworld();
-			
-			executeCommand("gamerule setCommandFeedback false");
-			
+
+			// loop bossbar info
 			String loopInfo = (loopType == LoopTypes.TICKS ? "Ticks Left: " + loopTicks : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "");
-			
-			executeCommand(String.format("bossbar add loop_info \"%s\"", loopInfo));
-			executeCommand("bossbar set minecraft:loop_info color yellow");
-			executeCommand(String.format("bossbar set minecraft:loop_info value %s", loopTicks));
-			executeCommand(String.format("bossbar set minecraft:loop_info max %s", loopTicks));
-			executeCommand("bossbar set minecraft:loop_info players @a");
-			
+			loopBossBar.visible(showLoopInfo);
+			loopBossBar.setBossBarName(loopInfo);
+
+			// set mocap settings
 			executeCommand("mocap settings advanced experimental_release_warning false");
 			executeCommand("mocap settings playback start_as_recorded true");
 			executeCommand("mocap settings recording record_player_death false");
-			
 			executeCommand("mocap settings recording entity_tracking_distance 1");
 			
 			updateEntitiesToTrack(trackItems);
@@ -132,8 +131,9 @@ public class TimeLoop implements ModInitializer {
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
-			
+
 			recordingPlayers.add(playerName); // Add to recording list
+			loopBossBar.addPlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
 				executeCommand(String.format("mocap recording start %s", playerName));
@@ -144,6 +144,7 @@ public class TimeLoop implements ModInitializer {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
 			recordingPlayers.remove(playerName); // Remove from recording list
+			loopBossBar.removePlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Saving recording for Disconnected player: {}", playerName);
 				String recordingName = playerName + "_" + System.currentTimeMillis();
@@ -167,8 +168,11 @@ public class TimeLoop implements ModInitializer {
 				tickCounter++;
 				ticksLeft = loopTicks - tickCounter;
 				if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
-					executeCommand(String.format("bossbar set loop_info value %s", ticksLeft));
-					executeCommand(String.format("bossbar set loop_info name \"%s\"", (loopType == LoopTypes.TICKS ? "Ticks Left: " + ticksLeft : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "")));
+					loopBossBar.setBossBarName(loopType == LoopTypes.TICKS ? "Ticks Left: " + ticksLeft : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (timeOfDay - timeSetting) : "");
+					loopBossBar.setBossBarPercentage(loopTicks, tickCounter);
+				}
+				if (!showLoopInfo) {
+					loopBossBar.visible(false);
 				}
 				if (tickCounter >= loopTicks || ( timeOfDay == timeSetting && (loopType == LoopTypes.TIME_OF_DAY)) ) {
 					tickCounter = 0; // Reset counter
@@ -177,7 +181,7 @@ public class TimeLoop implements ModInitializer {
 				}
 			}
 		});
-		
+
 		LOOP_LOGGER.info("TimeLoop mod initialized successfully");
 	}
 
@@ -190,8 +194,7 @@ public class TimeLoop implements ModInitializer {
 			return;
 		}
 		if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) {
-			executeCommand("bossbar set minecraft:loop_info visible false");
-			executeCommand("bossbar set minecraft:loop_info players @a");
+			loopBossBar.visible(true);
 		}
 		isLooping = true;
 		config.isLooping = true;
@@ -252,7 +255,7 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void stopLoop() {
 		if (isLooping) {
-			if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) { executeCommand("bossbar set minecraft:loop_info visible false"); }
+			if (showLoopInfo && (loopType == LoopTypes.TICKS || loopType == LoopTypes.TIME_OF_DAY)) { loopBossBar.visible(true); }
 			LOOP_LOGGER.info("Stopping loop");
 			isLooping = false;
 			config.isLooping = false;
@@ -302,7 +305,7 @@ public class TimeLoop implements ModInitializer {
 	/**
 	 * Removes outdated entries from the scene file to ensure the number of subscenes does not exceed the maximum allowed loops.
 	 *
-	 * The method checks if there are more recorded subscenes in the scene file than the value specified by maxLoops. If so, 
+	 * The method checks if there are more recorded subscenes in the scene file than the value specified by maxLoops. If so,
 	 * it removes the oldest entries to maintain the desired number. The updated data is then saved back to the file.
 	 *
 	 */
@@ -353,7 +356,7 @@ public class TimeLoop implements ModInitializer {
 	 * This method modifies the entities being tracked based on the specified parameter,
 	 * enabling or disabling item tracking.
 	 *
-	 * @param items A boolean value. If true, includes items in the tracking list. 
+	 * @param items A boolean value. If true, includes items in the tracking list.
 	 *              If false, excludes items and tracks only vehicles.
 	 */
 	public void updateEntitiesToTrack(boolean items) {

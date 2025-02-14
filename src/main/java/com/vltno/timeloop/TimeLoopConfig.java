@@ -20,7 +20,7 @@ public class TimeLoopConfig {
     public long timeOfDay = 0;
     public boolean trackTimeOfDay = true;
     public int ticksLeft;
-    
+
     public boolean showLoopInfo = true;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
@@ -29,11 +29,11 @@ public class TimeLoopConfig {
     private static Path configPath;
 
     /**
-     * Loads the configuration from the specified config directory.
+     * Loads the configuration from the world directory.
      * If the file does not exist, a default config is created and saved.
      *
      * @param configDir the config directory (usually obtained from FabricLoader)
-     * @return an instance of TheLoopConfig
+     * @return an instance of LoopConfig
      */
     public static TimeLoopConfig load(Path configDir) {
         configPath = configDir.resolve("timeloop.json");

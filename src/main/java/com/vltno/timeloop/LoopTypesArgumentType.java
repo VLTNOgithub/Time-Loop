@@ -26,5 +26,4 @@ public class LoopTypesArgumentType extends EnumArgumentType<LoopTypes> {
     public static LoopTypes getLoopType(CommandContext<ServerCommandSource> context, String name) {
         return context.getArgument(name, LoopTypes.class);
     }
-
 }
