@@ -3,6 +3,7 @@ package com.vltno.timeloop;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -29,6 +30,7 @@ public class TimeLoop implements ModInitializer {
 	public long timeSetting;
 	public boolean loopBasedOnTimeOfDay;
 	public boolean loopOnSleep;
+	public boolean loopOnDeath;
 	public boolean loopTimeOfDay;
 	public boolean isLooping;
 	public int maxLoops;
@@ -76,6 +78,7 @@ public class TimeLoop implements ModInitializer {
 			timeSetting = config.timeSetting;
 			loopBasedOnTimeOfDay = config.loopBasedOnTimeOfDay;
 			loopOnSleep = config.loopOnSleep;
+			loopOnDeath = config.loopOnDeath;
 			loopTimeOfDay = config.loopTimeOfDay;
 			ticksLeft = config.ticksLeft;
 			sceneName = config.sceneName;
@@ -129,8 +132,13 @@ public class TimeLoop implements ModInitializer {
 			}
 		});
 
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			if (!loopOnDeath) { return; }
+			runLoopIteration();
+		});
+		
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			if (loopOnSleep) { return; }
+			if (loopOnSleep || loopOnDeath) { return; }
 			if (loopBasedOnTimeOfDay) { timeOfDay = serverWorld.getTimeOfDay(); };
 			if (isLooping) {
 				tickCounter++;
@@ -142,7 +150,7 @@ public class TimeLoop implements ModInitializer {
 				}
 			}
 		});
-
+		
 		LOOP_LOGGER.info("TimeLoop mod initialized successfully");
 	}
 

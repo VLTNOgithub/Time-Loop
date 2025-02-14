@@ -50,7 +50,7 @@ public class Commands {
 
                 .then(CommandManager.literal("status")
                         .executes(context -> {
-                            String extras = mod.loopOnSleep ? "" : mod.loopBasedOnTimeOfDay ? " Time of day: " + mod.timeOfDay : " Ticks Left: " + mod.ticksLeft;
+                            String extras = mod.loopOnDeath ? "Looping on death." : mod.loopOnSleep ? "Looping on sleep." : mod.loopBasedOnTimeOfDay ? " Time of day: " + mod.timeOfDay : " Ticks Left: " + mod.ticksLeft;
                             String status = mod.isLooping ?
                                     "Loop is active. Current iteration: " + mod.loopIteration + extras:
                                     "Loop is inactive. Last iteration: " + mod.loopIteration + extras;
@@ -111,6 +111,23 @@ public class Commands {
                                     mod.config.save();
                                     context.getSource().sendMessage(Text.literal("Looping on sleep is set to: " + newLoopOnSleep));
                                     LOGGER.info("Looping on sleep set to {}", newLoopOnSleep);
+                                    return 1;
+                                })))
+                
+                .then(CommandManager.literal("loopOnDeath")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .executes(context -> {
+                            context.getSource().sendMessage(Text.literal("Looping on death is set to: " + mod.loopOnDeath));
+                            return 1;
+                        })
+                        .then(CommandManager.argument("bool", BoolArgumentType.bool())
+                                .executes(context -> {
+                                    boolean newLoopOnDeath = BoolArgumentType.getBool(context, "bool");
+                                    mod.loopOnDeath = newLoopOnDeath;
+                                    mod.config.loopOnDeath = newLoopOnDeath;
+                                    mod.config.save();
+                                    context.getSource().sendMessage(Text.literal("Looping on death is set to: " + newLoopOnDeath));
+                                    LOGGER.info("Looping on death set to {}", newLoopOnDeath);
                                     return 1;
                                 })))
 
@@ -177,6 +194,8 @@ public class Commands {
                             mod.config.loopBasedOnTimeOfDay = false;
                             mod.loopOnSleep = false;
                             mod.config.loopOnSleep = false;
+                            mod.loopOnDeath = false;
+                            mod.config.loopOnDeath = false;
                             mod.ticksLeft = mod.loopLength;
                             mod.config.ticksLeft = mod.config.loopLength;
                             mod.executeCommand("mocap playback stop_all");

@@ -20,6 +20,7 @@ public class TimeLoopConfig {
     public long timeOfDay = 0;
     public boolean loopBasedOnTimeOfDay = false;
     public boolean loopOnSleep = false;
+    public boolean loopOnDeath = false;
     public boolean loopTimeOfDay = true;
     public int ticksLeft;
 
