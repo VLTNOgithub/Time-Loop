@@ -145,7 +145,7 @@ public class TimeLoop implements ModInitializer {
 			loopBossBar.addPlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
-				executeCommand("mocap recording start " + playerName);
+				startLoop();
 			}
 		});
 
@@ -156,7 +156,7 @@ public class TimeLoop implements ModInitializer {
 			loopBossBar.removePlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Saving recording for Disconnected player: {}", playerName);
-				String recordingName = "-" + playerName + "." + playerName + ".1";
+				String recordingName = "-+mc." + playerName + ".1";
 				executeCommand(String.format("mocap recording stop " + recordingName));
 				executeCommand("mocap recording save " + recordingName + " " + recordingName);
 			}
@@ -222,9 +222,6 @@ public class TimeLoop implements ModInitializer {
 		ticksLeft = loopLengthTicks;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();
-		for (String playerName : recordingPlayers) {
-			executeCommand(String.format("mocap recording start %s", playerName));
-		}
 	}
 
 	/**
@@ -234,7 +231,7 @@ public class TimeLoop implements ModInitializer {
 		LOOP_LOGGER.info("Starting iteration {} of loop", loopIteration);
 		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
 		for (String playerName : recordingPlayers) {
-			String recordingName = "-" + playerName + "." + playerName + ".1";
+			String recordingName = "-+mc." + playerName + ".1";
 			
 			executeCommand("mocap playback start " + recordingName);
 		}
@@ -248,7 +245,6 @@ public class TimeLoop implements ModInitializer {
 	 * Starts the recordings.
 	 */
 	private void startRecordings() {
-		// Start recording for every player
 		for (String playerName : recordingPlayers) {
 			executeCommand(String.format("mocap recording start %s", playerName));
 		}
@@ -264,10 +260,10 @@ public class TimeLoop implements ModInitializer {
 			config.isLooping = false;
 			loopBossBar.visible(false);
 			for (String playerName : recordingPlayers) {
-				String recordingName = "-" + playerName + "." + playerName + ".1";
+				String recordingName = "-+mc." + playerName + ".1";
 				
 				executeCommand("mocap recording stop " + recordingName);
-//				executeCommand("mocap recording save " + recordingName + " " + recordingName);
+				executeCommand("mocap recording save " + recordingName + " " + recordingName);
 			}
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
@@ -293,74 +289,6 @@ public class TimeLoop implements ModInitializer {
 	}
 
 	/**
-	 * Checks if a recording file with the specified name exists in the predefined recordings directory.
-	 * The method returns a boolean indicating the existence of the file.
-	 *
-	 * @param recordingName The name of the recording file to check, without the file extension.
-	 * @return true if the recording file exists, false otherwise.
-	 */
-	private boolean recordingFileExists(String recordingName) {
-		// Build the complete path for the recording directory using the absolute world path
-		Path recordingDir = worldFolder.resolve("mocap_files").resolve("recordings");
-		Path recordingFile = recordingDir.resolve(recordingName.toLowerCase() + ".mcmocap_rec");
-
-		boolean exists = recordingFile.toFile().exists();
-		if (!exists) {
-			LOOP_LOGGER.error("Expected recording file does not exist: {}", recordingFile.toAbsolutePath());
-		}
-		return exists;
-	}
-
-	/**
-	 * Removes outdated entries from the scene file to ensure the number of subscenes does not exceed the maximum allowed loops.
-	 *
-	 * The method checks if there are more recorded subscenes in the scene file than the value specified by maxLoops. If so,
-	 * it removes the oldest entries to maintain the desired number. The updated data is then saved back to the file.
-	 *
-	 */
-	private void removeOldSceneEntries() {
-		if (isLooping) {
-			if (maxLoops > 1) {
-				Path sceneDir = worldFolder.resolve("mocap_files").resolve("scenes");
-				Path sceneFile = sceneDir.resolve(sceneName+".mcmocap_scene");
-
-				// Check if the scene file exists
-				if (sceneFile.toFile().exists()) {
-					try {
-						// Load the scene data from the file
-						String jsonContent = new String(java.nio.file.Files.readAllBytes(sceneFile));
-
-						// Parse the content
-						com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonContent).getAsJsonObject();
-						com.google.gson.JsonArray subScenes = jsonObject.getAsJsonArray("subscenes");
-
-						// Check if we have more scenes than maxLoops
-						if (subScenes.size() > maxLoops) {
-							// Calculate the number of scenes to remove
-							int entriesToRemove = subScenes.size() - maxLoops;
-							// Remove the excess entries (removing from the start of the array)
-							for (int i = 0; i < entriesToRemove; i++) {
-								subScenes.remove(0); // Remove the first (oldest) entry
-							}
-
-							// Update the JSON object with the modified subScenes array
-							jsonObject.add("subScenes", subScenes);
-
-							// Write the updated JSON back to the file
-							java.nio.file.Files.write(sceneFile, jsonObject.toString().getBytes());
-							LOOP_LOGGER.info("Removed old scene entries to maintain maxLoops: {}", maxLoops);
-						}
-					} catch (java.io.IOException e) {
-						LOOP_LOGGER.error("Failed to read or write scene file: {}", sceneFile, e);
-					}
-				} else {
-					LOOP_LOGGER.error("Scene file does not exist: {}", sceneFile);
-				}
-			}
-		}
-	}
-
-	/**
 	 * Updates the entities to be tracked for recording and playback settings.
 	 * This method modifies the entities being tracked based on the specified parameter,
 	 * enabling or disabling item tracking.
@@ -370,7 +298,7 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void updateEntitiesToTrack(boolean items) {
 		String entitiesToTrack = "@vehicles" + (items ? ";@items" : "");
-		executeCommand(String.format("mocap settings recording record_entities %s", entitiesToTrack));
+		executeCommand(String.format("mocap settings recording track_entities %s", entitiesToTrack));
 		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
 	}
 }
