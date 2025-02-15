@@ -120,18 +120,6 @@ public class TimeLoop implements ModInitializer {
 				executeCommand(String.format("mocap playback start .%s", sceneName));
 				startLoop();
 			}
-			if (config.firstStart) {
-				config.firstStart = false;
-				config.save();
-
-				// Send message to all ops
-				for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-					LOOP_LOGGER.info("GRRRRRRRRRRRRRRRRRRRRRRRRRRR");
-					if (server.getPlayerManager().isOperator(player.getGameProfile())) {
-						player.sendMessage(Text.literal(("Use '/loop start' to start the Time loop!")));
-					}
-				}
-			}
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -145,6 +133,17 @@ public class TimeLoop implements ModInitializer {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
 
+			if (config.firstStart) {
+				config.firstStart = false;
+				config.save();
+
+				LOOP_LOGGER.info("First start detected, sending message to ops.");
+				
+				if (server.getPlayerManager().isOperator(player.getGameProfile())) {
+					player.sendMessage(Text.literal(("Use '/loop start' to start the time loop!")));
+				}
+			}
+			
 			recordingPlayers.add(playerName); // Add to recording list
 			loopBossBar.addPlayer(player);
 			if (isLooping) {
