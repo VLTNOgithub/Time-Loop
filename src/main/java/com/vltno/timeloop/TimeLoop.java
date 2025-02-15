@@ -90,7 +90,6 @@ public class TimeLoop implements ModInitializer {
 			timeSetting = config.timeSetting;
 			trackTimeOfDay = config.trackTimeOfDay;
 			ticksLeft = config.ticksLeft;
-			sceneName = config.sceneName;
 			
 			showLoopInfo = config.showLoopInfo;
 			trackItems = config.trackItems;
@@ -112,12 +111,10 @@ public class TimeLoop implements ModInitializer {
 			
 			updateEntitiesToTrack(trackItems);
 			
-			executeCommand(String.format("mocap scenes add %s", sceneName));
 			if (config.isLooping) {
 				LOOP_LOGGER.info("Loop was active in config, automatically restarting loop.");
 				// Reset the in-memory flag so that startLoop() does not return early.
 				isLooping = false;
-				executeCommand(String.format("mocap playback start .%s", sceneName));
 				startLoop();
 			}
 		});
@@ -148,7 +145,7 @@ public class TimeLoop implements ModInitializer {
 			loopBossBar.addPlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
-				executeCommand(String.format("mocap recording start %s", playerName));
+				executeCommand("mocap recording start " + playerName);
 			}
 		});
 
@@ -159,12 +156,9 @@ public class TimeLoop implements ModInitializer {
 			loopBossBar.removePlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Saving recording for Disconnected player: {}", playerName);
-				String recordingName = playerName + "_" + System.currentTimeMillis();
-				executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
-				executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
-				if (recordingFileExists(recordingName)) {
-					executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
-				}
+				String recordingName = "-" + playerName + "." + playerName + ".1";
+				executeCommand(String.format("mocap recording stop " + recordingName));
+				executeCommand("mocap recording save " + recordingName + " " + recordingName);
 			}
 		});
 
@@ -219,7 +213,7 @@ public class TimeLoop implements ModInitializer {
 			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
 		}
-        if (showLoopInfo) {loopBossBar.visible(true);}
+        if (showLoopInfo) { loopBossBar.visible(true); }
 		isLooping = true;
 		config.isLooping = true;
 		startTimeOfDay = serverWorld.getTimeOfDay();
@@ -228,6 +222,9 @@ public class TimeLoop implements ModInitializer {
 		ticksLeft = loopLengthTicks;
 		LOOP_LOGGER.info("Starting Loop");
 		startRecordings();
+		for (String playerName : recordingPlayers) {
+			executeCommand(String.format("mocap recording start %s", playerName));
+		}
 	}
 
 	/**
@@ -235,12 +232,12 @@ public class TimeLoop implements ModInitializer {
 	 */
 	private void runLoopIteration() {
 		LOOP_LOGGER.info("Starting iteration {} of loop", loopIteration);
-		saveRecordings();
-		removeOldSceneEntries();
-		startRecordings();
 		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
-		executeCommand("mocap playback stop_all including_others");
-		executeCommand(String.format("mocap playback start .%s", sceneName));
+		for (String playerName : recordingPlayers) {
+			String recordingName = "-" + playerName + "." + playerName + ".1";
+			
+			executeCommand("mocap playback start " + recordingName);
+		}
 		loopIteration++;
 		config.loopIteration = loopIteration;
 		config.save();
@@ -258,23 +255,6 @@ public class TimeLoop implements ModInitializer {
 	}
 
 	/**
-	 * Saves the recordings.
-	 */
-	public void saveRecordings() {
-		// Stop and save recordings for each player
-		for (String playerName : recordingPlayers) {
-			String recordingName = playerName + "_" + System.currentTimeMillis();
-
-			LOOP_LOGGER.info("Processing recording for player: {}", playerName);
-			executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
-			executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
-			if (recordingFileExists(recordingName)) {
-				executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
-			}
-		}
-	}
-
-	/**
 	 * Stops the loop.
 	 */
 	public void stopLoop() {
@@ -283,7 +263,12 @@ public class TimeLoop implements ModInitializer {
 			isLooping = false;
 			config.isLooping = false;
 			loopBossBar.visible(false);
-			saveRecordings();
+			for (String playerName : recordingPlayers) {
+				String recordingName = "-" + playerName + "." + playerName + ".1";
+				
+				executeCommand("mocap recording stop " + recordingName);
+//				executeCommand("mocap recording save " + recordingName + " " + recordingName);
+			}
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
 			ticksLeft = loopLengthTicks;
@@ -385,7 +370,7 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void updateEntitiesToTrack(boolean items) {
 		String entitiesToTrack = "@vehicles" + (items ? ";@items" : "");
-		executeCommand(String.format("mocap settings playback record_entities %s", entitiesToTrack));
+		executeCommand(String.format("mocap settings recording record_entities %s", entitiesToTrack));
 		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
 	}
 }
