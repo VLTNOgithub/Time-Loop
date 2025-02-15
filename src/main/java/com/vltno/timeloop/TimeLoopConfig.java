@@ -10,8 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class TimeLoopConfig {
-    // These values will be loaded/saved from/to the JSON config file.
-    public String sceneName = "loop_scene";
+    // These values will be loaded/saved from/to the JSON config file.bossbar set minecraft:loop_info
     public boolean firstStart = true;
     public int loopIteration = 1;
     public boolean isLooping = false;

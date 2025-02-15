@@ -26,7 +26,7 @@ public class Commands {
                             if (!mod.isLooping) {
                                 mod.startLoop();
                                 context.getSource().sendMessage(Text.literal("Loop started!"));
-                                LOGGER.info("loop started");
+                                LOGGER.info("Loop started");
                                 return 1;
                             }
                             context.getSource().sendMessage(Text.literal("Loop already running!"));
@@ -96,8 +96,6 @@ public class Commands {
                                             mod.config.ticksLeft = newTicks;
 
                                             mod.config.save();
-                                            
-                                            mod.executeCommand(String.format("bossbar set minecraft:loop_info max %s", newTicks));
                                             context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + newTicks + " ticks"));
                                             LOGGER.info("Loop ticks set to {} ticks", newTicks);
                                             return 1;
