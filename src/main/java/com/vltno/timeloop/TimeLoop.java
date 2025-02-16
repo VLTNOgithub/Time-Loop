@@ -188,16 +188,19 @@ public class TimeLoop implements ModInitializer {
 
 			if (isLooping) {
 				if (loopType == LoopTypes.TIME_OF_DAY) {
-					long time = (serverWorld.getTimeOfDay() % 24000);
-					long timeFixed = (time > 24000) ? (time % 24000) : time;
-//					
+					if (timeSetting <= startTimeOfDay) { // prevent stupid 1 tick loop bug
+						startTimeOfDay = 0;
+						config.startTimeOfDay = 0;}
+
+					long time = (serverWorld.getTimeOfDay() > 24000 ? serverWorld.getTimeOfDay() % 24000 : serverWorld.getTimeOfDay());
+//
 //					long timeLeft = (timeFixed > timeSetting) ? Math.abs(timeFixed - (2 * timeSetting)) : Math.abs(timeFixed - timeSetting);
 //					LOOP_LOGGER.info("Time Fixed: " + timeFixed);
 //					LOOP_LOGGER.info("Time Setting: " + timeSetting);
 //					LOOP_LOGGER.info("Time Left: " + timeLeft);
 
-					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(timeFixed - timeSetting);
-					
+					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(time - timeSetting);
+
 					updateInfoBar((int)timeSetting, (int)timeLeft);
 					if (Math.abs(timeSetting - timeLeft) >= timeSetting) {
 						runLoopIteration();
