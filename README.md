@@ -28,7 +28,7 @@ Simply use commands to configure the loop.
      - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progress bar.
 
 # LoopType Options
-- `TICK` (Loops every `setTicks` ticks)
+- `TICK` (Loops every `setLength` ticks)
 - `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
 - `SLEEP` (Loops when you sleep)
 - `DEATH` (Loops when you die)
