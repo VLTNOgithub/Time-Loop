@@ -18,13 +18,14 @@ Simply use commands to configure the loop.
  - `status` - Shows the status of the loop in chat.
  - **settings**
    - `maxLoops [0]` - Sets the maximum amount of loops. 0 is infinite.
-   - `setTicks [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
+   - `setLength [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
    - `setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
    - `loopType [TICK]` - Sets the type of loop.
    - **toggles**
      - `trackTimeOfDay [true]` - Toggles tracking the time of day during loops.
      - `trackItems [false]` - Toggles tracking items during loops.
      - `showLoopInfo [true]` - Toggles a bar at the top of the screen showing the amount of ticks/time left until the next loop.
+     - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progress bar.
 
 # LoopType Options
 - `TICK` (Loops every `setTicks` ticks)

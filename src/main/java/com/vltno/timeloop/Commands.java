@@ -80,10 +80,10 @@ public class Commands {
                                             return 1;
                                         })))
 
-                        .then(CommandManager.literal("setTicks")
+                        .then(CommandManager.literal("setLength")
                                 .requires(source -> source.hasPermissionLevel(2))
                                 .executes(context -> {
-                                    context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + mod.loopLengthTicks + " ticks"));
+                                    context.getSource().sendMessage(Text.literal("Loop length is set to: " + mod.loopLengthTicks + " ticks"));
                                     return 1;
                                 })
                                 .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
@@ -97,7 +97,7 @@ public class Commands {
 
                                             mod.config.save();
                                             context.getSource().sendMessage(Text.literal("Loop ticks is set to: " + newTicks + " ticks"));
-                                            LOGGER.info("Loop ticks set to {} ticks", newTicks);
+                                            LOGGER.info("Loop length set to {} ticks", newTicks);
                                             return 1;
                                         })))
                         
@@ -174,7 +174,25 @@ public class Commands {
                                                     LOGGER.info("Tracking items set to {}", newTrackItems);
                                                     return 1;
                                                 })))
-                                
+
+                                .then(CommandManager.literal("displayTimeInTicks")
+                                        .requires(source -> source.hasPermissionLevel(2))
+                                        .executes(context -> {
+                                            context.getSource().sendMessage(Text.literal("Display Time in ticks is set to: " + mod.displayTimeInTicks));
+                                            return 1;
+                                        })
+                                        .then(CommandManager.argument("value", BoolArgumentType.bool())
+                                                .executes(context -> {
+                                                    boolean newDisplayTimeInTicks = BoolArgumentType.getBool(context, "value");
+                                                    mod.displayTimeInTicks = newDisplayTimeInTicks;
+                                                    mod.config.displayTimeInTicks = newDisplayTimeInTicks;
+                                                    mod.config.save();
+
+                                                    context.getSource().sendMessage(Text.literal("Display Time in ticks is set to: " + newDisplayTimeInTicks));
+                                                    LOGGER.info("Display Time in ticks set to {}", newDisplayTimeInTicks);
+                                                    return 1;
+                                                })))
+
                                 .then(CommandManager.literal("showLoopInfo")
                                         .requires(source -> source.hasPermissionLevel(2))
                                         .executes(context -> {

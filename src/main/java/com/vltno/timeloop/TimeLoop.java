@@ -17,6 +17,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +46,7 @@ public class TimeLoop implements ModInitializer {
 	private List<String> recordingPlayers; // Add this field
 
 	public boolean showLoopInfo;
+	public boolean displayTimeInTicks;
 	public boolean trackItems;
 	public LoopTypes loopType;
 
@@ -92,6 +96,7 @@ public class TimeLoop implements ModInitializer {
 			ticksLeft = config.ticksLeft;
 			
 			showLoopInfo = config.showLoopInfo;
+			displayTimeInTicks = config.displayTimeInTicks;
 			trackItems = config.trackItems;
 			loopType = config.loopType;
 			
@@ -175,11 +180,7 @@ public class TimeLoop implements ModInitializer {
 					long time = serverWorld.getTimeOfDay();
 					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(startTimeOfDay - timeSetting);
 
-					if (showLoopInfo && isLooping) {
-						loopBossBar.setBossBarName("Time Left: " + timeLeft);
-						loopBossBar.setBossBarPercentage((int)timeSetting, (int)(timeSetting - timeLeft));
-					}
-
+					updateProgressBar((int)timeSetting, (int)(timeSetting - timeLeft));
 					if (timeSetting - timeLeft == timeSetting) {
 						runLoopIteration();
 					}
@@ -188,11 +189,8 @@ public class TimeLoop implements ModInitializer {
 				else if (loopType == LoopTypes.TICKS) {
 					tickCounter++;
 					ticksLeft = loopLengthTicks - tickCounter;
-					if (showLoopInfo && isLooping) {
-						loopBossBar.setBossBarName("Ticks Left: " + ticksLeft);
-						loopBossBar.setBossBarPercentage(loopLengthTicks, tickCounter);
-					}
 
+					updateProgressBar(loopLengthTicks, ticksLeft);
 					if (tickCounter >= loopLengthTicks) {
 						tickCounter = 0; // Reset counter
 						ticksLeft = loopLengthTicks; // Reset
@@ -245,6 +243,7 @@ public class TimeLoop implements ModInitializer {
 	 * Starts the recordings.
 	 */
 	private void startRecordings() {
+		// Start recording for every player
 		for (String playerName : recordingPlayers) {
 			executeCommand(String.format("mocap recording start %s", playerName));
 		}
@@ -269,6 +268,15 @@ public class TimeLoop implements ModInitializer {
 			tickCounter = 0;
 			ticksLeft = loopLengthTicks;
 			LOOP_LOGGER.info("Loop stopped!");
+		}
+	}
+
+	public void updateProgressBar(int time, int timeLeft) {
+		if (showLoopInfo && isLooping) {
+			if (displayTimeInTicks) {loopBossBar.setBossBarName("Time Left: " + timeLeft);}
+			else {loopBossBar.setBossBarName("Time Left: " + convertTicksToTime(timeLeft));}
+
+			loopBossBar.setBossBarPercentage(time, timeLeft);
 		}
 	}
 
@@ -300,6 +308,19 @@ public class TimeLoop implements ModInitializer {
 		String entitiesToTrack = "@vehicles" + (items ? ";@items" : "");
 		executeCommand(String.format("mocap settings recording track_entities %s", entitiesToTrack));
 		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
+	}
+
+	/**
+	 * Converts time in ticks to HH:MM:SS
+	 *
+	 * @param ticksLeft A int value.
+	 */
+	public String convertTicksToTime(int ticksLeft) {
+		int timeLeft = ticksLeft / 20;
+		int hours = timeLeft / 3600;
+		int minutes = (timeLeft % 3600) / 60;
+		int seconds = timeLeft % 60;
+		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 	}
 }
 
