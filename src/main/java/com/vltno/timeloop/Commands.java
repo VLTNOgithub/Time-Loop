@@ -224,7 +224,7 @@ public class Commands {
                             mod.startTimeOfDay = 0;
                             mod.config.startTimeOfDay = 0;
                             
-                            mod.timeSetting = 0;
+                            mod.timeSetting = 13000;
                             mod.config.timeSetting = 0;
                             
                             mod.ticksLeft = mod.loopLengthTicks;
