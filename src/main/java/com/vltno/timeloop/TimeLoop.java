@@ -187,9 +187,9 @@ public class TimeLoop implements ModInitializer {
 			if (isLooping) {
 				if (loopType == LoopTypes.TIME_OF_DAY) {
 					long time = serverWorld.getTimeOfDay();
-					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(startTimeOfDay - timeSetting);
+					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(time - timeSetting);
 
-					updateProgressBar((int)timeSetting, (int)(timeSetting - timeLeft));
+					updateProgressBar((int)timeSetting, (int)timeLeft);
 					if (timeSetting - timeLeft == timeSetting) {
 						runLoopIteration();
 					}
@@ -294,7 +294,7 @@ public class TimeLoop implements ModInitializer {
 
 	public void updateProgressBar(int time, int timeLeft) {
 		if (showLoopInfo && isLooping) {
-			if (displayTimeInTicks) {loopBossBar.setBossBarName("Time Left: " + timeLeft);}
+			if (displayTimeInTicks) { loopBossBar.setBossBarName("Time Left: " + timeLeft); }
 			else {loopBossBar.setBossBarName("Time Left: " + convertTicksToTime(timeLeft));}
 
 			loopBossBar.setBossBarPercentage(time, timeLeft);
