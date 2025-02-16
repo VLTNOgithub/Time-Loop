@@ -145,6 +145,8 @@ public class TimeLoop implements ModInitializer {
 				config.firstStart = false;
 				config.save();
 
+				executeCommand(String.format("mocap scenes add %s", sceneName)); // Stupid patch because for some reason the first time fails, but when i add this, IT DOESNT FAIL. idk. if its fixed, remove this.
+				
 				LOOP_LOGGER.info("First start detected, sending message to ops.");
 				
 				if (server.getPlayerManager().isOperator(player.getGameProfile())) {
@@ -187,8 +189,15 @@ public class TimeLoop implements ModInitializer {
 			if (isLooping) {
 				if (loopType == LoopTypes.TIME_OF_DAY) {
 					long time = (serverWorld.getTimeOfDay() % 24000);
-					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(time - timeSetting);
+					long timeFixed = (time > 24000) ? (time % 24000) : time;
+//					
+//					long timeLeft = (timeFixed > timeSetting) ? Math.abs(timeFixed - (2 * timeSetting)) : Math.abs(timeFixed - timeSetting);
+//					LOOP_LOGGER.info("Time Fixed: " + timeFixed);
+//					LOOP_LOGGER.info("Time Setting: " + timeSetting);
+//					LOOP_LOGGER.info("Time Left: " + timeLeft);
 
+					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(timeFixed - timeSetting);
+					
 					updateInfoBar((int)timeSetting, (int)timeLeft);
 					if (Math.abs(timeSetting - timeLeft) >= timeSetting) {
 						runLoopIteration();
@@ -392,7 +401,7 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void updateEntitiesToTrack(boolean items) {
 		String entitiesToTrack = "@vehicles" + (items ? ";@items" : "");
-		executeCommand(String.format("mocap settings playback record_entities %s", entitiesToTrack));
+		executeCommand(String.format("mocap settings recording track_entities %s", entitiesToTrack));
 		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
 	}
 
