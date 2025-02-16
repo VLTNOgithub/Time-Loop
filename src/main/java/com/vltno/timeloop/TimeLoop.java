@@ -31,7 +31,7 @@ public class TimeLoop implements ModInitializer {
 	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
 	private Commands commands;
 	private static MinecraftServer server;
-	private ServerWorld serverWorld;
+	public ServerWorld serverWorld;
 
 	public LoopBossBar loopBossBar;
 
@@ -105,7 +105,7 @@ public class TimeLoop implements ModInitializer {
 			loopType = config.loopType;
 			
 			TimeLoop.server = server;
-			this.serverWorld = server.getOverworld();
+			serverWorld = server.getOverworld();
 
 			// Loop boss bar info
 			String loopInfo = (loopType == LoopTypes.TICKS ? "Ticks Left: " + loopLengthTicks : loopType == LoopTypes.TIME_OF_DAY ? "Time left: " + (startTimeOfDay - timeSetting) : "");
@@ -186,11 +186,11 @@ public class TimeLoop implements ModInitializer {
 
 			if (isLooping) {
 				if (loopType == LoopTypes.TIME_OF_DAY) {
-					long time = serverWorld.getTimeOfDay();
+					long time = (serverWorld.getTimeOfDay() % 24000);
 					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(time - timeSetting);
 
-					updateProgressBar((int)timeSetting, (int)timeLeft);
-					if (timeSetting - timeLeft == timeSetting) {
+					updateInfoBar((int)timeSetting, (int)timeLeft);
+					if (Math.abs(timeSetting - timeLeft) >= timeSetting) {
 						runLoopIteration();
 					}
 				}
@@ -199,7 +199,7 @@ public class TimeLoop implements ModInitializer {
 					tickCounter++;
 					ticksLeft = loopLengthTicks - tickCounter;
 
-					updateProgressBar(loopLengthTicks, ticksLeft);
+					updateInfoBar(loopLengthTicks, ticksLeft);
 					if (tickCounter >= loopLengthTicks) {
 						tickCounter = 0; // Reset counter
 						ticksLeft = loopLengthTicks; // Reset
@@ -223,8 +223,6 @@ public class TimeLoop implements ModInitializer {
         if (showLoopInfo) {loopBossBar.visible(true);}
 		isLooping = true;
 		config.isLooping = true;
-		startTimeOfDay = serverWorld.getTimeOfDay();
-		config.startTimeOfDay = startTimeOfDay;
 		tickCounter = 0;
 		ticksLeft = loopLengthTicks;
 		LOOP_LOGGER.info("Starting Loop");
@@ -292,7 +290,7 @@ public class TimeLoop implements ModInitializer {
 		}
 	}
 
-	public void updateProgressBar(int time, int timeLeft) {
+	public void updateInfoBar(int time, int timeLeft) {
 		if (showLoopInfo && isLooping) {
 			if (displayTimeInTicks) { loopBossBar.setBossBarName("Time Left: " + timeLeft); }
 			else {loopBossBar.setBossBarName("Time Left: " + convertTicksToTime(timeLeft));}

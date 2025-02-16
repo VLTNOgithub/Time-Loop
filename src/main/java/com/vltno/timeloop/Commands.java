@@ -24,6 +24,8 @@ public class Commands {
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
                             if (!mod.isLooping) {
+                                mod.startTimeOfDay = mod.serverWorld.getTimeOfDay();
+                                mod.config.startTimeOfDay = mod.startTimeOfDay;
                                 mod.startLoop();
                                 context.getSource().sendMessage(Text.literal("Loop started!"));
                                 LOGGER.info("loop started");
@@ -125,7 +127,7 @@ public class Commands {
                                     context.getSource().sendMessage(Text.literal("Time of day is set to: " + mod.timeSetting));
                                     return 1;
                                 })
-                                .then(CommandManager.argument("time", IntegerArgumentType.integer(0))
+                                .then(CommandManager.argument("time", IntegerArgumentType.integer(0, 24000))
                                         .executes(context -> {
                                             int newTime = IntegerArgumentType.getInteger(context, "time");
                                             mod.timeSetting = newTime;
