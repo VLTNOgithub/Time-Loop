@@ -338,7 +338,6 @@ public class TimeLoop implements ModInitializer {
 
 	/**
 	 * Removes outdated entries from the scene file to ensure the number of subscenes does not exceed the maximum allowed loops.
-	 *
 	 * The method checks if there are more recorded subscenes in the scene file than the value specified by maxLoops. If so,
 	 * it removes the oldest entries to maintain the desired number. The updated data is then saved back to the file.
 	 *

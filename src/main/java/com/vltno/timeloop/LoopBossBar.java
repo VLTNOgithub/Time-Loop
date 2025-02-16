@@ -28,10 +28,6 @@ public class LoopBossBar {
     public void setBossBarPercentage(int whole, int part) {
         bossBar.setPercent(1.0f - ((float) part / whole));
     }
-    
-    public float getBossBarPercentage() {
-        return bossBar.getPercent();
-    }
 
     public void addPlayer(ServerPlayerEntity player) {
         LOGGER.info("Adding player: {}", player.getName().getString());
