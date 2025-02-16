@@ -23,6 +23,7 @@ public class TimeLoopConfig {
     public int ticksLeft;
 
     public boolean showLoopInfo = true;
+    public boolean displayTimeInTicks = false;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
 

@@ -1,5 +1,8 @@
 package com.vltno.timeloop;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -17,6 +20,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +49,7 @@ public class TimeLoop implements ModInitializer {
 	private List<String> recordingPlayers; // Add this field
 
 	public boolean showLoopInfo;
+	public boolean displayTimeInTicks;
 	public boolean trackItems;
 	public LoopTypes loopType;
 
@@ -93,6 +100,7 @@ public class TimeLoop implements ModInitializer {
 			sceneName = config.sceneName;
 			
 			showLoopInfo = config.showLoopInfo;
+			displayTimeInTicks = config.displayTimeInTicks;
 			trackItems = config.trackItems;
 			loopType = config.loopType;
 			
@@ -181,11 +189,7 @@ public class TimeLoop implements ModInitializer {
 					long time = serverWorld.getTimeOfDay();
 					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(startTimeOfDay - timeSetting);
 
-					if (showLoopInfo && isLooping) {
-						loopBossBar.setBossBarName("Time Left: " + timeLeft);
-						loopBossBar.setBossBarPercentage((int)timeSetting, (int)(timeSetting - timeLeft));
-					}
-
+					updateProgressBar((int)timeSetting, (int)(timeSetting - timeLeft));
 					if (timeSetting - timeLeft == timeSetting) {
 						runLoopIteration();
 					}
@@ -194,11 +198,8 @@ public class TimeLoop implements ModInitializer {
 				else if (loopType == LoopTypes.TICKS) {
 					tickCounter++;
 					ticksLeft = loopLengthTicks - tickCounter;
-					if (showLoopInfo && isLooping) {
-						loopBossBar.setBossBarName("Ticks Left: " + ticksLeft);
-						loopBossBar.setBossBarPercentage(loopLengthTicks, tickCounter);
-					}
 
+					updateProgressBar(loopLengthTicks, ticksLeft);
 					if (tickCounter >= loopLengthTicks) {
 						tickCounter = 0; // Reset counter
 						ticksLeft = loopLengthTicks; // Reset
@@ -291,6 +292,15 @@ public class TimeLoop implements ModInitializer {
 		}
 	}
 
+	public void updateProgressBar(int time, int timeLeft) {
+		if (showLoopInfo && isLooping) {
+			if (displayTimeInTicks) {loopBossBar.setBossBarName("Time Left: " + timeLeft);}
+			else {loopBossBar.setBossBarName("Time Left: " + convertTicksToTime(timeLeft));}
+
+			loopBossBar.setBossBarPercentage(time, timeLeft);
+		}
+	}
+
 	/**
 	 * Executes a minecraft chat command.
 	 */
@@ -343,11 +353,11 @@ public class TimeLoop implements ModInitializer {
 				if (sceneFile.toFile().exists()) {
 					try {
 						// Load the scene data from the file
-						String jsonContent = new String(java.nio.file.Files.readAllBytes(sceneFile));
+						String jsonContent = new String(Files.readAllBytes(sceneFile));
 
 						// Parse the content
-						com.google.gson.JsonObject jsonObject = com.google.gson.JsonParser.parseString(jsonContent).getAsJsonObject();
-						com.google.gson.JsonArray subScenes = jsonObject.getAsJsonArray("subscenes");
+						JsonObject jsonObject = JsonParser.parseString(jsonContent).getAsJsonObject();
+						JsonArray subScenes = jsonObject.getAsJsonArray("subscenes");
 
 						// Check if we have more scenes than maxLoops
 						if (subScenes.size() > maxLoops) {
@@ -362,10 +372,10 @@ public class TimeLoop implements ModInitializer {
 							jsonObject.add("subScenes", subScenes);
 
 							// Write the updated JSON back to the file
-							java.nio.file.Files.write(sceneFile, jsonObject.toString().getBytes());
+							Files.write(sceneFile, jsonObject.toString().getBytes());
 							LOOP_LOGGER.info("Removed old scene entries to maintain maxLoops: {}", maxLoops);
 						}
-					} catch (java.io.IOException e) {
+					} catch (IOException e) {
 						LOOP_LOGGER.error("Failed to read or write scene file: {}", sceneFile, e);
 					}
 				} else {
@@ -387,6 +397,19 @@ public class TimeLoop implements ModInitializer {
 		String entitiesToTrack = "@vehicles" + (items ? ";@items" : "");
 		executeCommand(String.format("mocap settings playback record_entities %s", entitiesToTrack));
 		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
+	}
+
+	/**
+	 * Converts time in ticks to HH:MM:SS
+	 *
+	 * @param ticksLeft A int value.
+	 */
+	public String convertTicksToTime(int ticksLeft) {
+		int timeLeft = ticksLeft / 20;
+		int hours = timeLeft / 3600;
+		int minutes = (timeLeft % 3600) / 60;
+		int seconds = timeLeft % 60;
+		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 	}
 }
 

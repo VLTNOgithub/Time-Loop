@@ -25,6 +25,7 @@ Simply use commands to configure the loop.
      - `trackTimeOfDay [true]` - Toggles tracking the time of day during loops.
      - `trackItems [false]` - Toggles tracking items during loops.
      - `showLoopInfo [true]` - Toggles a bar at the top of the screen showing the amount of ticks/time left until the next loop.
+     - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progress bar.
 
 # LoopType Options
 - `TICK` (Loops every `setTicks` ticks)
