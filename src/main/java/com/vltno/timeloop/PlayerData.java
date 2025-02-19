@@ -16,10 +16,6 @@ public class PlayerData {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getNickname() {
         return nickname;
     }
