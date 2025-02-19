@@ -11,11 +11,12 @@ import java.nio.file.Path;
 
 public class TimeLoopConfig {
     // These values will be loaded/saved from/to the JSON config file.bossbar set minecraft:loop_info
+    public String sceneName = "loop_scene";
     public boolean firstStart = true;
     public int loopIteration = 1;
     public boolean isLooping = false;
     public int loopLengthTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
-    public int maxLoops = 0; //No limit by default
+    public int maxLoops = 0; // No limit by default
     public long timeSetting = 13000;
     public long startTimeOfDay = 0;
     public boolean trackTimeOfDay = true;
