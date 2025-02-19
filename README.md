@@ -28,10 +28,15 @@ Simply use commands to configure the loop.
      - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progress bar.
 
 # LoopType Options
-- `TICK` (Loops every `setLength` ticks)
-- `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
-- `SLEEP` (Loops when you sleep)
-- `DEATH` (Loops when you die)
+ - `TICK` (Loops every `setLength` ticks)
+ - `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
+ - `SLEEP` (Loops when you sleep)
+ - `DEATH` (Loops when you die)
+
+# Known Bugs
+ - Items stop tracking after around 100 loops
+ - Loops continue but don't track the player after 100 loops
+ - Skins are broken in multiplayer
 
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
