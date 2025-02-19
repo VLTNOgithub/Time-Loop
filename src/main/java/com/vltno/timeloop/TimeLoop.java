@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TimeLoop implements ModInitializer {
@@ -144,7 +145,7 @@ public class TimeLoop implements ModInitializer {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
 
-			loopSceneManager.addPlayer(playerName);
+			loopSceneManager.addPlayer(Arrays.asList(playerName));
 			loopBossBar.addPlayer(player);
 			
 			executeCommand(String.format("mocap scenes add %s", loopSceneManager.getPlayerSceneName(playerName)));
@@ -248,9 +249,13 @@ public class TimeLoop implements ModInitializer {
 		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
 		executeCommand("mocap playback stop_all including_others");
 		
-		loopSceneManager.forEachRecordingPlayer(playerName -> {
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			String playerName = playerData.getName();
+			String playerNickname = playerData.getNickname();
+			String playerSkin = playerData.getSkin();
+			
 			String playerSceneName = loopSceneManager.getPlayerSceneName(playerName);
-			executeCommand(String.format("mocap playback start .%s %s skin_from_player %s", playerSceneName, playerName, playerName));
+			executeCommand(String.format("mocap playback start .%s %s skin_from_player %s", playerSceneName, playerNickname, playerSkin));
 		});
 		
 		loopIteration++;
@@ -264,7 +269,8 @@ public class TimeLoop implements ModInitializer {
 	 */
 	private void startRecordings() {
 		// Start recording for every player
-		loopSceneManager.forEachRecordingPlayer(playerName -> {
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			String playerName = playerData.getName();
 			executeCommand(String.format("mocap recording start %s", playerName));
 		});
 	}
@@ -274,7 +280,8 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void saveRecordings() {
 		// Stop and save recordings for each player
-		loopSceneManager.forEachRecordingPlayer(playerName -> {
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			String playerName = playerData.getName();
 			String recordingName = playerName + "_" + System.currentTimeMillis();
 
 			String playerSceneName = loopSceneManager.getPlayerSceneName(playerName);
@@ -361,7 +368,8 @@ public class TimeLoop implements ModInitializer {
 			Path sceneDir = worldFolder.resolve("mocap_files").resolve("scenes");
 
 			List<Path> sceneFiles = new ArrayList<>();
-			loopSceneManager.forEachRecordingPlayer(playerSceneName -> {
+			loopSceneManager.forEachRecordingPlayer(playerData -> {
+				String playerSceneName = loopSceneManager.getPlayerSceneName(playerData.getName());
 				if (playerSceneName != null && !playerSceneName.isBlank()) {
 					sceneFiles.add(sceneDir.resolve(playerSceneName + ".mcmocap_scene"));
 				} else {
@@ -424,6 +432,19 @@ public class TimeLoop implements ModInitializer {
 		int minutes = (timeLeft % 3600) / 60;
 		int seconds = timeLeft % 60;
 		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+	}
+
+	public void modifyPlayerAttributes(String targetPlayerName, String newPlayerNickname, String newSkin) {
+		String playerSceneName = loopSceneManager.getPlayerSceneName(targetPlayerName);
+		executeCommand(String.format("mocap scenes modify .%s %s player_skin skin_from_player %s", playerSceneName, newPlayerNickname, newSkin));
+		
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			if (playerData.getName().equals(targetPlayerName)) {
+				playerData.setNickname(newPlayerNickname);
+				playerData.setSkin(newSkin);
+				LOOP_LOGGER.info("Modified loop attributes for player '{}' -> '{}' with skin '{}'", targetPlayerName, newPlayerNickname, newSkin);
+			}
+		});
 	}
 }
 
