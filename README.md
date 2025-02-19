@@ -28,10 +28,23 @@ Simply use commands to configure the loop.
      - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progress bar.
 
 # LoopType Options
-- `TICK` (Loops every `setTicks` ticks)
-- `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
-- `SLEEP` (Loops when you sleep)
-- `DEATH` (Loops when you die)
+ - `TICK` (Loops every `setLength` ticks)
+ - `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
+ - `SLEEP` (Loops when you sleep)
+ - `DEATH` (Loops when you die)
+
+# Known Issues
+ - Dying stops the player from looping
+ - Skins are broken in multiplayer
+ - Spectators don't appear as invisible in the loop
+ - If the loop starts before a player joins, they cannot see the loops
+ - Loops don't work through dimensions
+
+### Issue Links
+https://github.com/mt1006/mc-mocap-mod/issues/52
+https://github.com/mt1006/mc-mocap-mod/issues/53
+https://github.com/mt1006/mc-mocap-mod/issues/56
+https://github.com/mt1006/mc-mocap-mod/issues/57
 
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
