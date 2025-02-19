@@ -8,10 +8,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TimeLoopConfig {
     // These values will be loaded/saved from/to the JSON config file.bossbar set minecraft:loop_info
-    public String sceneName = "loop_scene";
+    public String scenePrefix = "loop_scene";
     public boolean firstStart = true;
     public int loopIteration = 1;
     public boolean isLooping = false;
@@ -26,6 +28,8 @@ public class TimeLoopConfig {
     public boolean displayTimeInTicks = false;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
+    
+    public List<String> recordingPlayers = new ArrayList<>();
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;
@@ -49,6 +53,7 @@ public class TimeLoopConfig {
         }
         // Create default config if none exists
         TimeLoopConfig config = new TimeLoopConfig();
+//        config.recordingPlayers.add("stufffffffffffff");
         config.save();
         return config;
     }

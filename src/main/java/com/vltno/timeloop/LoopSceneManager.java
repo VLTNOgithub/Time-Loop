@@ -6,20 +6,20 @@ import java.util.function.Consumer;
 
 public class LoopSceneManager {
     private TimeLoopConfig config;
-    private String sceneName;
+    private String scenePrefix;
     private List<String> recordingPlayers;
 
     // Constructor to initialize recordingPlayers
-    public LoopSceneManager(TimeLoopConfig _config) {
-        this.config = _config;
-        this.sceneName = config.sceneName;
+    public LoopSceneManager(TimeLoopConfig config) {
+        this.config = config;
+        this.scenePrefix = config.scenePrefix;
         this.recordingPlayers = new ArrayList<>();
     }
 
     // Method to add a player to the recordingPlayers list
     public void addPlayer(String playerName) {
         if (playerName != null && !playerName.isEmpty()) {
-            recordingPlayers.add(playerName.toLowerCase());
+            recordingPlayers.add(playerName);
         } else {
             System.out.println("Invalid player name. Player not added.");
         }
@@ -41,7 +41,7 @@ public class LoopSceneManager {
 
     // Method to generate playerSceneName for a given player
     public String getPlayerSceneName(String playerName) {
-        return (sceneName + "_" + playerName).toLowerCase();
+        return (playerName.startsWith(scenePrefix)) ? playerName : (scenePrefix + "_" + playerName).toLowerCase();
     }
 
     // Method to get all playerSceneNames for recordingPlayers
@@ -59,5 +59,13 @@ public class LoopSceneManager {
     
     public void forEachRecordingPlayer(Consumer<String> action) {
         recordingPlayers.forEach(action);
+    }
+    
+    public void setRecordingPlayers(List<String> recordingPlayers) {
+        this.recordingPlayers = recordingPlayers;
+    }
+    
+    public void saveRecordingPlayers() {
+        config.recordingPlayers = this.recordingPlayers;
     }
 }
