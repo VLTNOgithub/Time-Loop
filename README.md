@@ -36,7 +36,7 @@ Simply use commands to configure the loop.
 # Known Issues
  - Dying stops the player from looping
  - Skins are broken in multiplayer
- - Spectators don't appear as invisible in the loop
+ - You can see spectators' held item and worn armour
  - If the loop starts before a player joins, they cannot see the loops
  - Loops don't work through dimensions
 
