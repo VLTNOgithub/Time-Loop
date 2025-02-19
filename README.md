@@ -33,10 +33,18 @@ Simply use commands to configure the loop.
  - `SLEEP` (Loops when you sleep)
  - `DEATH` (Loops when you die)
 
-# Known Bugs
- - Items stop tracking after around 100 loops
- - Loops continue but don't track the player after 100 loops
+# Known Issues
+ - Dying stops the player from looping
  - Skins are broken in multiplayer
+ - Spectators don't appear as invisible in the loop
+ - If the loop starts before a player joins, they cannot see the loops
+ - Loops don't work through dimensions
+
+### Issue Links
+https://github.com/mt1006/mc-mocap-mod/issues/52
+https://github.com/mt1006/mc-mocap-mod/issues/53
+https://github.com/mt1006/mc-mocap-mod/issues/56
+https://github.com/mt1006/mc-mocap-mod/issues/57
 
 # Support
 If you need help or encounter an issue, don't hesitate to ask someone in the discord: https://discord.gg/nzDETZhqur
