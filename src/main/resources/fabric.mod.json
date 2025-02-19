@@ -21,6 +21,6 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*",
-		"mocap": "*"
+		"mocap": "1.4-alpha-6"
 	}
 }
