@@ -1,6 +1,6 @@
 # Time Loop
-![Static Badge](https://img.shields.io/badge/GitHub-Release-green?logo=Github&link=https%3A%2F%2Fgithub.com%2FVLTNOgithub%2FTime-Loop%2Freleases%2Flatest)
-<img alt="Static Badge" src="https://img.shields.io/badge/Modrinth-Release-green?logo=Modrinth&link=https%3A%2F%2Fmodrinth.com%2Fmod%2Ftimeloop">
+[![Static Badge](https://img.shields.io/badge/GitHub-Release-green?logo=Github)](https://github.com/VLTNOgithub/Time-Loop/releases/latest)
+[![Static Badge](https://img.shields.io/badge/Modrinth-Release-green?logo=Modrinth)](https://modrinth.com/mod/timeloop/versions)
 \
 A mod that 'loops' time by using the Motion Capture Mod.
 *Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO.*
