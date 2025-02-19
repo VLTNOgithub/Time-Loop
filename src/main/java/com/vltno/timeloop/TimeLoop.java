@@ -163,6 +163,7 @@ public class TimeLoop implements ModInitializer {
 			if (isLooping) {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
 				executeCommand(String.format("mocap recording start %s", playerName));
+				if (showLoopInfo) { loopBossBar.visible(true); }
 			}
 		});
 
@@ -247,8 +248,9 @@ public class TimeLoop implements ModInitializer {
 		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
 		executeCommand("mocap playback stop_all including_others");
 		
-		loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
-			executeCommand(String.format("mocap playback start .%s", playerSceneName));
+		loopSceneManager.forEachRecordingPlayer(playerName -> {
+			String playerSceneName = loopSceneManager.getPlayerSceneName(playerName);
+			executeCommand(String.format("mocap playback start .%s %s skin_from_player %s", playerSceneName, playerName, playerName));
 		});
 		
 		loopIteration++;
