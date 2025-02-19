@@ -1,4 +1,7 @@
 # Time Loop
+[![Static Badge](https://img.shields.io/badge/GitHub-Release-green?logo=Github)](https://github.com/VLTNOgithub/Time-Loop/releases/latest)
+[![Static Badge](https://img.shields.io/badge/Modrinth-Release-green?logo=Modrinth)](https://modrinth.com/mod/timeloop/version/latest)
+\
 A mod that 'loops' time by using the Motion Capture Mod.
 *Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO.*
 
@@ -21,11 +24,12 @@ Simply use commands to configure the loop.
    - `setLength [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
    - `setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
    - `loopType [TICK]` - Sets the type of loop.
+   - `modifyPlayer [target_player] [nickname] [skin]` - Changes a looped player's nickname and skin.
    - **toggles**
      - `trackTimeOfDay [true]` - Toggles tracking the time of day during loops.
      - `trackItems [false]` - Toggles tracking items during loops.
      - `showLoopInfo [true]` - Toggles a bar at the top of the screen showing the amount of ticks/time left until the next loop.
-     - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progress bar.
+     - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progaress bar.
 
 # LoopType Options
  - `TICK` (Loops every `setLength` ticks)
@@ -35,7 +39,6 @@ Simply use commands to configure the loop.
 
 # Known Issues
  - Dying stops the player from looping
- - Skins are broken in multiplayer
  - You can see spectators' held item and worn armour
  - If the loop starts before a player joins, they cannot see the loops
  - Loops don't work through dimensions
