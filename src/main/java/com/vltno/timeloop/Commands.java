@@ -216,8 +216,11 @@ public class Commands {
                             mod.config.loopType = LoopTypes.TICKS;
                             
                             mod.executeCommand("mocap playback stop_all");
-                            mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
-                            mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));
+                            mod.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
+                                mod.executeCommand(String.format("mocap scenes remove %s", playerSceneName));
+                                mod.executeCommand(String.format("mocap scenes add %s", playerSceneName));
+                            });
+
                             mod.loopIteration = 0;
                             mod.config.loopIteration = 0;
                             mod.config.save();
