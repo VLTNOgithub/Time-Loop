@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TimeLoop implements ModInitializer {
@@ -43,10 +44,8 @@ public class TimeLoop implements ModInitializer {
 	public boolean trackTimeOfDay;
 	public boolean isLooping;
 	public int maxLoops;
-	public String sceneName;
 	private int tickCounter = 0; // Tracks elapsed ticks
 	public int ticksLeft;
-	private List<String> recordingPlayers; // Add this field
 
 	public boolean showLoopInfo;
 	public boolean displayTimeInTicks;
@@ -55,6 +54,9 @@ public class TimeLoop implements ModInitializer {
 
 	// The configuration object loaded from disk
 	public TimeLoopConfig config;
+	
+	// The loop scene manager object
+	public LoopSceneManager loopSceneManager;
 
 	// Get the world folder path for config/recording loading
 	private Path worldFolder;
@@ -63,7 +65,6 @@ public class TimeLoop implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOOP_LOGGER.info("Initializing TimeLoop mod");
-		recordingPlayers = new ArrayList<>(); // Initialize the list
 
 		// Register the custom ArgumentType
 		ArgumentTypeRegistry.registerArgumentType(Identifier.of("timeloop",""), LoopTypesArgumentType.class, ConstantArgumentSerializer.of(LoopTypesArgumentType::new));
@@ -90,6 +91,9 @@ public class TimeLoop implements ModInitializer {
 			worldFolder = server.getSavePath(WorldSavePath.ROOT);
 			config = TimeLoopConfig.load(worldFolder);
 
+			// Loop scene manager
+			loopSceneManager = new LoopSceneManager(config);
+
 			loopIteration = config.loopIteration;
 			loopLengthTicks = config.loopLengthTicks;
 			isLooping = config.isLooping;
@@ -97,12 +101,13 @@ public class TimeLoop implements ModInitializer {
 			timeSetting = config.timeSetting;
 			trackTimeOfDay = config.trackTimeOfDay;
 			ticksLeft = config.ticksLeft;
-			sceneName = config.sceneName;
 			
 			showLoopInfo = config.showLoopInfo;
 			displayTimeInTicks = config.displayTimeInTicks;
 			trackItems = config.trackItems;
 			loopType = config.loopType;
+			
+			loopSceneManager.setRecordingPlayers(config.recordingPlayers);
 			
 			TimeLoop.server = server;
 			serverWorld = server.getOverworld();
@@ -120,13 +125,12 @@ public class TimeLoop implements ModInitializer {
 			
 			updateEntitiesToTrack(trackItems);
 			
-			executeCommand(String.format("mocap scenes add %s", sceneName));
-			if (config.isLooping) {
-				LOOP_LOGGER.info("Loop was active in config, automatically restarting loop.");
-				// Reset the in-memory flag so that startLoop() does not return early.
-				isLooping = false;
-				executeCommand(String.format("mocap playback start .%s", sceneName));
-				startLoop();
+			try {
+				loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
+					executeCommand(String.format("mocap scenes add %s", playerSceneName));
+				});
+			} catch (Error e) {
+				LOOP_LOGGER.error("Failed to add player scenes to mocap scenes: {}", e.getMessage());
 			}
 		});
 
@@ -141,11 +145,14 @@ public class TimeLoop implements ModInitializer {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
 
+			loopSceneManager.addPlayer(Arrays.asList(playerName));
+			loopBossBar.addPlayer(player);
+			
+			executeCommand(String.format("mocap scenes add %s", loopSceneManager.getPlayerSceneName(playerName)));
+			
 			if (config.firstStart) {
 				config.firstStart = false;
 				config.save();
-
-				executeCommand(String.format("mocap scenes add %s", sceneName)); // Stupid patch because for some reason the first time fails, but when i add this, IT DOESNT FAIL. idk. if its fixed, remove this.
 				
 				LOOP_LOGGER.info("First start detected, sending message to ops.");
 				
@@ -154,27 +161,22 @@ public class TimeLoop implements ModInitializer {
 				}
 			}
 			
-			recordingPlayers.add(playerName); // Add to recording list
-			loopBossBar.addPlayer(player);
 			if (isLooping) {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
 				executeCommand(String.format("mocap recording start %s", playerName));
+				if (showLoopInfo) { loopBossBar.visible(true); }
 			}
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			ServerPlayerEntity player = handler.getPlayer();
 			String playerName = player.getName().getString();
-			recordingPlayers.remove(playerName); // Remove from recording list
+			
+			loopSceneManager.removePlayer(playerName);
 			loopBossBar.removePlayer(player);
 			if (isLooping) {
-				LOOP_LOGGER.info("Saving recording for Disconnected player: {}", playerName);
-				String recordingName = playerName + "_" + System.currentTimeMillis();
-				executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
-				executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
-				if (recordingFileExists(recordingName)) {
-					executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
-				}
+				saveRecordings();
+				loopSceneManager.saveRecordingPlayers();
 			}
 		});
 
@@ -193,11 +195,6 @@ public class TimeLoop implements ModInitializer {
 						config.startTimeOfDay = 0;}
 
 					long time = (serverWorld.getTimeOfDay() > 24000 ? serverWorld.getTimeOfDay() % 24000 : serverWorld.getTimeOfDay());
-//
-//					long timeLeft = (timeFixed > timeSetting) ? Math.abs(timeFixed - (2 * timeSetting)) : Math.abs(timeFixed - timeSetting);
-//					LOOP_LOGGER.info("Time Fixed: " + timeFixed);
-//					LOOP_LOGGER.info("Time Setting: " + timeSetting);
-//					LOOP_LOGGER.info("Time Left: " + timeLeft);
 
 					long timeLeft = (time > timeSetting) ? Math.abs(serverWorld.getTimeOfDay() - (2 * timeSetting)) : Math.abs(time - timeSetting);
 
@@ -232,7 +229,7 @@ public class TimeLoop implements ModInitializer {
 			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
 		}
-        if (showLoopInfo) {loopBossBar.visible(true);}
+        if (showLoopInfo) { loopBossBar.visible(true); }
 		isLooping = true;
 		config.isLooping = true;
 		tickCounter = 0;
@@ -251,7 +248,16 @@ public class TimeLoop implements ModInitializer {
 		startRecordings();
 		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
 		executeCommand("mocap playback stop_all including_others");
-		executeCommand(String.format("mocap playback start .%s", sceneName));
+		
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			String playerName = playerData.getName();
+			String playerNickname = playerData.getNickname();
+			String playerSkin = playerData.getSkin();
+			
+			String playerSceneName = loopSceneManager.getPlayerSceneName(playerName);
+			executeCommand(String.format("mocap playback start .%s %s skin_from_player %s", playerSceneName, playerNickname, playerSkin));
+		});
+		
 		loopIteration++;
 		config.loopIteration = loopIteration;
 		config.save();
@@ -263,9 +269,10 @@ public class TimeLoop implements ModInitializer {
 	 */
 	private void startRecordings() {
 		// Start recording for every player
-		for (String playerName : recordingPlayers) {
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			String playerName = playerData.getName();
 			executeCommand(String.format("mocap recording start %s", playerName));
-		}
+		});
 	}
 
 	/**
@@ -273,16 +280,19 @@ public class TimeLoop implements ModInitializer {
 	 */
 	public void saveRecordings() {
 		// Stop and save recordings for each player
-		for (String playerName : recordingPlayers) {
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			String playerName = playerData.getName();
 			String recordingName = playerName + "_" + System.currentTimeMillis();
+
+			String playerSceneName = loopSceneManager.getPlayerSceneName(playerName);
 
 			LOOP_LOGGER.info("Processing recording for player: {}", playerName);
 			executeCommand(String.format("mocap recording stop -+mc.%s.1", playerName));
 			executeCommand(String.format("mocap recording save %s -+mc.%s.1", recordingName.toLowerCase(), playerName));
 			if (recordingFileExists(recordingName)) {
-				executeCommand(String.format("mocap scenes add_to %s %s", sceneName, recordingName.toLowerCase()));
+				executeCommand(String.format("mocap scenes add_to %s %s", playerSceneName, recordingName.toLowerCase()));
 			}
-		}
+		});
 	}
 
 	/**
@@ -295,6 +305,7 @@ public class TimeLoop implements ModInitializer {
 			config.isLooping = false;
 			loopBossBar.visible(false);
 			saveRecordings();
+			loopSceneManager.saveRecordingPlayers();
 			executeCommand("mocap playback stop_all including_others");
 			tickCounter = 0;
 			ticksLeft = loopLengthTicks;
@@ -353,39 +364,41 @@ public class TimeLoop implements ModInitializer {
 	 *
 	 */
 	private void removeOldSceneEntries() {
-		if (isLooping) {
-			if (maxLoops > 1) {
-				Path sceneDir = worldFolder.resolve("mocap_files").resolve("scenes");
-				Path sceneFile = sceneDir.resolve(sceneName+".mcmocap_scene");
+		if (isLooping && maxLoops > 1) {
+			Path sceneDir = worldFolder.resolve("mocap_files").resolve("scenes");
 
-				// Check if the scene file exists
+			List<Path> sceneFiles = new ArrayList<>();
+			loopSceneManager.forEachRecordingPlayer(playerData -> {
+				String playerSceneName = loopSceneManager.getPlayerSceneName(playerData.getName());
+				if (playerSceneName != null && !playerSceneName.isBlank()) {
+					sceneFiles.add(sceneDir.resolve(playerSceneName + ".mcmocap_scene"));
+				} else {
+					LOOP_LOGGER.warn("Invalid playerSceneName encountered: {}", playerSceneName);
+				}
+			});
+
+			if (sceneFiles.isEmpty()) {
+				LOOP_LOGGER.warn("No scene files found to process.");
+			}
+
+			for (Path sceneFile : sceneFiles) {
 				if (sceneFile.toFile().exists()) {
 					try {
-						// Load the scene data from the file
 						String jsonContent = new String(Files.readAllBytes(sceneFile));
-
-						// Parse the content
 						JsonObject jsonObject = JsonParser.parseString(jsonContent).getAsJsonObject();
 						JsonArray subScenes = jsonObject.getAsJsonArray("subscenes");
 
-						// Check if we have more scenes than maxLoops
 						if (subScenes.size() > maxLoops) {
-							// Calculate the number of scenes to remove
 							int entriesToRemove = subScenes.size() - maxLoops;
-							// Remove the excess entries (removing from the start of the array)
 							for (int i = 0; i < entriesToRemove; i++) {
-								subScenes.remove(0); // Remove the first (oldest) entry
+								subScenes.remove(0); // Remove the oldest
 							}
-
-							// Update the JSON object with the modified subScenes array
 							jsonObject.add("subScenes", subScenes);
-
-							// Write the updated JSON back to the file
 							Files.write(sceneFile, jsonObject.toString().getBytes());
-							LOOP_LOGGER.info("Removed old scene entries to maintain maxLoops: {}", maxLoops);
+							LOOP_LOGGER.info("Removed old scene entries for file: {}", sceneFile);
 						}
 					} catch (IOException e) {
-						LOOP_LOGGER.error("Failed to read or write scene file: {}", sceneFile, e);
+						LOOP_LOGGER.error("Failed to process scene file: {}", sceneFile, e);
 					}
 				} else {
 					LOOP_LOGGER.error("Scene file does not exist: {}", sceneFile);
@@ -419,6 +432,19 @@ public class TimeLoop implements ModInitializer {
 		int minutes = (timeLeft % 3600) / 60;
 		int seconds = timeLeft % 60;
 		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+	}
+
+	public void modifyPlayerAttributes(String targetPlayerName, String newPlayerNickname, String newSkin) {
+		String playerSceneName = loopSceneManager.getPlayerSceneName(targetPlayerName);
+		executeCommand(String.format("mocap scenes modify .%s %s player_skin skin_from_player %s", playerSceneName, newPlayerNickname, newSkin));
+		
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			if (playerData.getName().equals(targetPlayerName)) {
+				playerData.setNickname(newPlayerNickname);
+				playerData.setSkin(newSkin);
+				LOOP_LOGGER.info("Modified loop attributes for player '{}' -> '{}' with skin '{}'", targetPlayerName, newPlayerNickname, newSkin);
+			}
+		});
 	}
 }
 

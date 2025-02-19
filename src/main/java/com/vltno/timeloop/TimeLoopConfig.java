@@ -8,15 +8,19 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TimeLoopConfig {
-    // These values will be loaded/saved from/to the JSON config file.
-    public String sceneName = "loop_scene";
+    // These values will be loaded/saved from/to the JSON config file.bossbar set minecraft:loop_info
+    public String scenePrefix = "loop_scene";
     public boolean firstStart = true;
     public int loopIteration = 1;
     public boolean isLooping = false;
     public int loopLengthTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
-    public int maxLoops = 0; //No limit by default
+    public int maxLoops = 0; // No limit by default
     public long timeSetting = 13000;
     public long startTimeOfDay = 0;
     public boolean trackTimeOfDay = true;
@@ -26,6 +30,8 @@ public class TimeLoopConfig {
     public boolean displayTimeInTicks = false;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
+
+    public Map<String, PlayerData> recordingPlayers = new HashMap<>();
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path configPath;
@@ -39,16 +45,28 @@ public class TimeLoopConfig {
      */
     public static TimeLoopConfig load(Path configDir) {
         configPath = configDir.resolve("timeloop.json");
+        TimeLoopConfig config = null;
+
         if (Files.exists(configPath)) {
             try (Reader reader = Files.newBufferedReader(configPath)) {
-                TimeLoopConfig config = GSON.fromJson(reader, TimeLoopConfig.class);
-                return config;
-            } catch (IOException e) {
+                config = GSON.fromJson(reader, TimeLoopConfig.class);
+            } catch (Exception e) {
+                System.err.println("Failed to load config file: " + e.getMessage());
                 e.printStackTrace();
             }
         }
-        // Create default config if none exists
-        TimeLoopConfig config = new TimeLoopConfig();
+
+        if (config == null) {
+            config = new TimeLoopConfig();
+            System.err.println("Config file not found or invalid. Generating a default configuration.");
+        }
+
+        // Validate recordingPlayers field and provide defaults if necessary
+        if (config.recordingPlayers == null || !(config.recordingPlayers instanceof Map)) {
+            System.err.println("Invalid or missing recordingPlayers data in config. Initializing with an empty map.");
+            config.recordingPlayers = new HashMap<>();
+        }
+
         config.save();
         return config;
     }

@@ -3,6 +3,7 @@ package com.vltno.timeloop;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -137,6 +138,20 @@ public class Commands {
                                             LOGGER.info("Time of day set to {}", newTime);
                                             return 1;
                                         })))
+                        
+                        .then(CommandManager.literal("modifyPlayer")
+                                .requires(source -> source.hasPermissionLevel(2))
+                                .then(CommandManager.argument("targetPlayer", StringArgumentType.string())
+                                .then(CommandManager.argument("newName", StringArgumentType.string())
+                                .then(CommandManager.argument("newSkin", StringArgumentType.string())
+                                        .executes(context -> {
+                                            String targetPlayer = StringArgumentType.getString(context, "targetPlayer");
+                                            String newName = StringArgumentType.getString(context, "newName");
+                                            String newSkin = StringArgumentType.getString(context, "newSkin");
+                                            
+                                            mod.modifyPlayerAttributes(targetPlayer, newName, newSkin);
+                                            return 1;
+                                        })))))
 
                         // TOGGLES
                         .then(CommandManager.literal("toggles")
@@ -240,8 +255,11 @@ public class Commands {
                             mod.config.displayTimeInTicks = false;
                             
                             mod.executeCommand("mocap playback stop_all");
-                            mod.executeCommand(String.format("mocap scenes remove %s", mod.sceneName));
-                            mod.executeCommand(String.format("mocap scenes add %s", mod.sceneName));
+                            mod.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
+                                mod.executeCommand(String.format("mocap scenes remove %s", playerSceneName));
+                                mod.executeCommand(String.format("mocap scenes add %s", playerSceneName));
+                            });
+
                             mod.loopIteration = 0;
                             mod.config.loopIteration = 0;
                             mod.config.save();
