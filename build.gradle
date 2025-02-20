@@ -72,6 +72,7 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
 	}
+	exclude "assets/time-loop/icon.psd"
 }
 
 // configure the maven publication
