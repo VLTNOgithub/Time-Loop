@@ -4,10 +4,10 @@ plugins {
 }
 
 version = project.mod_version
-group = project.maven_group
+group = project.mod_group
 
 base {
-	archivesName = project.archives_base_name
+	archivesName = project.mod_jar_name
 }
 
 repositories {
@@ -31,10 +31,27 @@ dependencies {
 
 processResources {
 	inputs.property "version", project.version
-
+	
+	var replaceProperties = [
+			"mod_id": mod_id,
+			"mod_version": mod_version,
+			"mod_name": mod_name,
+			"mod_description": mod_description,
+			"mod_authors": mod_authors,
+			"mod_homepage": mod_homepage,
+			"mod_source": mod_source,
+			"mod_issues": mod_issues,
+			"mod_license": mod_license,
+			"mod_mocap_version": mod_mocap_version,
+			
+			"mod_group": mod_group,
+			"mod_jar_name": mod_jar_name,
+	]
+	
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand replaceProperties
 	}
+	inputs.properties replaceProperties
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -61,7 +78,7 @@ jar {
 publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
+			artifactId = mod_jar_name
 			from components.java
 		}
 	}
