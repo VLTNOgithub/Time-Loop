@@ -53,7 +53,7 @@ public class Commands {
 
                 .then(CommandManager.literal("status")
                         .executes(context -> {
-                            String extras = " Looping on " + mod.loopType.asString() + "." + (mod.isLooping && mod.loopType == LoopTypes.TICKS ? " Ticks Left: " + mod.ticksLeft : "") + (mod.trackItems ? " Tracking items." : "");
+                            String extras = " Looping on " + mod.loopType + "." + (mod.isLooping && mod.loopType == "TICKS" ? " Ticks Left: " + mod.ticksLeft : "") + (mod.trackItems ? " Tracking items." : "");
                             String status = mod.isLooping ?
                                     "Loop is active. Current iteration: " + mod.loopIteration + extras:
                                     "Loop is inactive. Last iteration: " + mod.loopIteration + extras;
@@ -68,7 +68,7 @@ public class Commands {
                         .then(CommandManager.literal("setLoopType")
                                 .requires(source -> source.hasPermissionLevel(2))
                                 .executes(context -> {
-                                    context.getSource().sendMessage(Text.literal("Loop type is set to: " + mod.loopType.asString()));
+                                    context.getSource().sendMessage(Text.literal("Loop type is set to: " + mod.loopType));
                                     return 1;
                                 })
                                 .then(CommandManager.argument("loopType", StringArgumentType.word())
@@ -86,10 +86,16 @@ public class Commands {
                                             mod.config.loopType = newLoopType;
                                             mod.config.save();
 
-                                            context.getSource().sendMessage(Text.literal("Looping type is set to: " + newLoopType.asString()));
-                                            LOGGER.info("Loop type set to {}", newLoopType.asString());
+                                            //Hide BossBar when loopType is not Ticks or TimeOfDay
+                                            if (mod.showLoopInfo) {
+                                                mod.loopBossBar.visible(newLoopType.equals("TICKS") || newLoopType.equals("TIME_OF_DAY"));
+                                            }
+
+                                            context.getSource().sendMessage(Text.literal("Looping type is set to: " + newLoopType));
+                                            LOGGER.info("Loop type set to {}", newLoopType);
                                             return 1;
                                         })))
+
 
                         .then(CommandManager.literal("setLength")
                                 .requires(source -> source.hasPermissionLevel(2))
@@ -232,7 +238,9 @@ public class Commands {
                                                     mod.config.showLoopInfo = newShowLoopInfo;
                                                     mod.config.save();
 
-                                                    mod.loopBossBar.visible(newShowLoopInfo);
+                                                    if (newShowLoopInfo) {
+                                                        mod.loopBossBar.visible(mod.loopType.equals("TICKS") || mod.loopType.equals("TIME_OF_DAY"));
+                                                    }
 
                                                     context.getSource().sendMessage(Text.literal("Showing loop info is set to: " + newShowLoopInfo));
                                                     LOGGER.info("Show loop info set to {}", newShowLoopInfo);
@@ -256,8 +264,8 @@ public class Commands {
                             mod.trackItems = false;
                             mod.config.trackItems = false;
                             
-                            mod.loopType = LoopTypes.TICKS;
-                            mod.config.loopType = LoopTypes.TICKS;
+                            mod.loopType = "TICKS";
+                            mod.config.loopType = "TICKS";
                             
                             mod.displayTimeInTicks = false;
                             mod.config.displayTimeInTicks = false;
