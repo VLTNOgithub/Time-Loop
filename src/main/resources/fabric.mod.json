@@ -10,7 +10,7 @@
 	],
 	"license": "CC0-1.0",
 	"icon": "assets/time-loop/icon.png",
-	"environment": "server",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
 			"com.vltno.timeloop.TimeLoop"

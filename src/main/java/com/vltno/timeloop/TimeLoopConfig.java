@@ -8,9 +8,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class TimeLoopConfig {
@@ -29,7 +27,7 @@ public class TimeLoopConfig {
     public boolean showLoopInfo = true;
     public boolean displayTimeInTicks = false;
     public boolean trackItems = false;
-    public LoopTypes loopType = LoopTypes.TICKS;
+    public String loopType = "TICKS";
 
     public Map<String, PlayerData> recordingPlayers = new HashMap<>();
 
