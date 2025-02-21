@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -19,7 +19,7 @@ public class Commands {
         this.mod = mod;
     }
     
-    public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
+    public void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("loop")
                 .then(CommandManager.literal("start")
                         .requires(source -> source.hasPermissionLevel(2))
@@ -71,9 +71,17 @@ public class Commands {
                                     context.getSource().sendMessage(Text.literal("Loop type is set to: " + mod.loopType.asString()));
                                     return 1;
                                 })
-                                .then(CommandManager.argument("loopType", new LoopTypesArgumentType())
+                                .then(CommandManager.argument("loopType", StringArgumentType.word())
+                                        .suggests((context, builder) ->
+                                                CommandSource.suggestMatching(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder)
+                                        )
                                         .executes(context -> {
-                                            LoopTypes newLoopType = LoopTypesArgumentType.getLoopType(context, "loopType");
+                                            LoopTypes newLoopType = LoopTypes.fromString(StringArgumentType.getString(context, "loopType"));
+                                            if (!newLoopType.equals(LoopTypes.TICKS) && !newLoopType.equals(LoopTypes.TIME_OF_DAY) &&
+                                                    !newLoopType.equals(LoopTypes.SLEEP) && !newLoopType.equals(LoopTypes.DEATH)) {
+                                                context.getSource().sendMessage(Text.literal("Invalid loop type. Allowed types: TICKS, TIME_OF_DAY, SLEEP, DEATH."));
+                                                return 0;
+                                            }
                                             mod.loopType = newLoopType;
                                             mod.config.loopType = newLoopType;
                                             mod.config.save();

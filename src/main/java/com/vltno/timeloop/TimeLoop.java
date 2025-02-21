@@ -66,13 +66,10 @@ public class TimeLoop implements ModInitializer {
 	public void onInitialize() {
 		LOOP_LOGGER.info("Initializing TimeLoop mod");
 
-		// Register the custom ArgumentType
-		ArgumentTypeRegistry.registerArgumentType(Identifier.of("timeloop",""), LoopTypesArgumentType.class, ConstantArgumentSerializer.of(LoopTypesArgumentType::new));
-
 		// Register commands
 		commands = new Commands(this);
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
-				commands.register(dispatcher, registryAccess, environment)
+				commands.register(dispatcher)
 		);
 
 		// BossBar
