@@ -1,14 +1,16 @@
 {
 	"schemaVersion": 1,
 	"id": "time-loop",
-	"version": "${version}",
-	"name": "Time Loop",
-	"description": "A set of commands that 'loops' time by using the Motion Capture Mod. Motion Capture mod by mt1006. Inspired by Tombino. Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO",
-	"authors": [
-		"Luigi",
-		"VLTNO"
-	],
-	"license": "CC0-1.0",
+	"version": "${mod_version}",
+	"name": "${mod_name}",
+	"description": "${mod_description}",
+	"authors": ["${mod_author_1}", "${mod_author_2}"],
+	"contact": {
+		"homepage": "${mod_homepage}",
+		"sources": "${mod_source}",
+		"issues": "${mod_issues}"
+	},
+	"license": "${mod_license}",
 	"icon": "assets/time-loop/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -21,6 +23,6 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*",
-		"mocap": "1.4-alpha-6"
+		"mocap": "${mod_mocap_version}"
 	}
 }
