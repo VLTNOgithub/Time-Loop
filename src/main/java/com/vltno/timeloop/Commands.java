@@ -77,9 +77,7 @@ public class Commands {
                                         )
                                         .executes(context -> {
                                             LoopTypes newLoopType = LoopTypes.fromString(StringArgumentType.getString(context, "loopType"));
-                                            if (!newLoopType.equals(LoopTypes.TICKS) && !newLoopType.equals(LoopTypes.TIME_OF_DAY) &&
-                                                    !newLoopType.equals(LoopTypes.SLEEP) && !newLoopType.equals(LoopTypes.DEATH)) {
-                                                context.getSource().sendMessage(Text.literal("Invalid loop type. Allowed types: TICKS, TIME_OF_DAY, SLEEP, DEATH."));
+                                            if (newLoopType == null) {
                                                 return 0;
                                             }
                                             mod.loopType = newLoopType;
