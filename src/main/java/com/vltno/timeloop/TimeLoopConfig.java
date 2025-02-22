@@ -27,7 +27,7 @@ public class TimeLoopConfig {
     public boolean showLoopInfo = true;
     public boolean displayTimeInTicks = false;
     public boolean trackItems = false;
-    public String loopType = "TICKS";
+    public LoopTypes loopType = LoopTypes.TICKS;
 
     public Map<String, PlayerData> recordingPlayers = new HashMap<>();
 

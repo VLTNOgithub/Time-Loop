@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class TimeLoop implements ModInitializer {
 	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
@@ -48,7 +47,7 @@ public class TimeLoop implements ModInitializer {
 	public boolean showLoopInfo;
 	public boolean displayTimeInTicks;
 	public boolean trackItems;
-	public String loopType;
+	public LoopTypes loopType;
 
 	// The configuration object loaded from disk
 	public TimeLoopConfig config;
@@ -77,7 +76,7 @@ public class TimeLoop implements ModInitializer {
 		loopBossBar = new LoopBossBar();
 
 		EntitySleepEvents.STOP_SLEEPING.register((entity, sleepingPos) -> {
-			if (entity.isPlayer() && (Objects.equals(loopType, "SLEEP")) ) {
+			if (entity.isPlayer() && (loopType == LoopTypes.SLEEP) ) {
 				LOOP_LOGGER.info("Player slept, looping.");
 				runLoopIteration();
 			}
@@ -109,6 +108,8 @@ public class TimeLoop implements ModInitializer {
 			
 			TimeLoop.server = server;
 			serverWorld = server.getOverworld();
+
+			loopBossBar.visible(false);
 
 			// set mocap settings
 			executeCommand("mocap settings advanced experimental_release_warning false");
@@ -158,7 +159,7 @@ public class TimeLoop implements ModInitializer {
 				LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
 				executeCommand(String.format("mocap recording start %s", playerName));
 				if (showLoopInfo) {
-					loopBossBar.visible(loopType.equals("TICKS") || loopType.equals("TIME_OF_DAY"));
+					loopBossBar.visible(loopType.equals(LoopTypes.TICKS) || loopType.equals(LoopTypes.TIME_OF_DAY));
 				}
 			}
 		});
@@ -176,15 +177,15 @@ public class TimeLoop implements ModInitializer {
 		});
 
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-			if (!Objects.equals(loopType, "DEATH")) { return; }
+			if (loopType != LoopTypes.DEATH) { return; }
 			runLoopIteration();
 		});
 		
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			if (Objects.equals(loopType, "SLEEP") || Objects.equals(loopType, "DEATH")) { return; }
+			if (loopType == LoopTypes.SLEEP || loopType == LoopTypes.DEATH) { return; }
 
 			if (isLooping) {
-				if (Objects.equals(loopType, "TIME_OF_DAY")) {
+				if (loopType == LoopTypes.TIME_OF_DAY) {
 					if (timeSetting <= startTimeOfDay) { // prevent stupid 1 tick loop bug
 						startTimeOfDay = 0;
 						config.startTimeOfDay = 0;}
@@ -199,7 +200,7 @@ public class TimeLoop implements ModInitializer {
 					}
 				}
 
-				else if (Objects.equals(loopType, "TICKS")) {
+				else if (loopType == LoopTypes.TICKS) {
 					tickCounter++;
 					ticksLeft = loopLengthTicks - tickCounter;
 
@@ -225,7 +226,7 @@ public class TimeLoop implements ModInitializer {
 			return;
 		}
 		if (showLoopInfo) {
-			loopBossBar.visible(loopType.equals("TICKS") || loopType.equals("TIME_OF_DAY"));
+			loopBossBar.visible(loopType.equals(LoopTypes.TICKS) || loopType.equals(LoopTypes.TIME_OF_DAY));
 		}
 
 		isLooping = true;
