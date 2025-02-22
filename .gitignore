@@ -38,3 +38,7 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# misc
+/code_changes.json
+/git_diff_monitor.py

@@ -35,7 +35,7 @@ public class LoopBossBar {
     }
 
     public void removePlayer(ServerPlayerEntity player) {
-        LOGGER.info("Player removed");
+        LOGGER.info("Removing player: {}", player.getName().getString());
         bossBar.removePlayer(player);
     }
 }

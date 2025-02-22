@@ -76,17 +76,12 @@ public class Commands {
                                                 CommandSource.suggestMatching(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder)
                                         )
                                         .executes(context -> {
-                                            LoopTypes newLoopType = LoopTypes.fromString(StringArgumentType.getString(context, "loopType"));
-                                            if (!newLoopType.equals(LoopTypes.TICKS) && !newLoopType.equals(LoopTypes.TIME_OF_DAY) &&
-                                                    !newLoopType.equals(LoopTypes.SLEEP) && !newLoopType.equals(LoopTypes.DEATH)) {
-                                                context.getSource().sendMessage(Text.literal("Invalid loop type. Allowed types: TICKS, TIME_OF_DAY, SLEEP, DEATH."));
-                                                return 0;
-                                            }
+                                            LoopTypes newLoopType = LoopTypes.valueOf(StringArgumentType.getString(context, "loopType"));
                                             mod.loopType = newLoopType;
                                             mod.config.loopType = newLoopType;
                                             mod.config.save();
 
-                                            //Hide BossBar when loopType is not Ticks or TimeOfDay
+                                            // Hide BossBar when loopType is not Ticks or TimeOfDay
                                             if (mod.showLoopInfo) {
                                                 mod.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
                                             }
