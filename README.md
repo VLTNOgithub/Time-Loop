@@ -1,6 +1,6 @@
 # Time Loop
 [![Static Badge](https://img.shields.io/badge/GitHub-Release-green?logo=Github)](https://github.com/VLTNOgithub/Time-Loop/releases/latest)
-[![Static Badge](https://img.shields.io/badge/Modrinth-Release-green?logo=Modrinth)](https://modrinth.com/mod/timeloop/versions)
+[![Static Badge](https://img.shields.io/badge/Modrinth-Release-green?logo=Modrinth)](https://modrinth.com/mod/timeloop/version/latest)
 \
 A mod that 'loops' time by using the Motion Capture Mod.
 *Motion Capture mod by mt1006. Inspired by [this Tombino video](https://www.youtube.com/watch?v=i602-oh0a0c). Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO.*
@@ -23,7 +23,7 @@ Simply use commands to configure the loop.
    - `maxLoops [0]` - Sets the maximum amount of loops. 0 is infinite.
    - `setLength [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
    - `setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
-   - `setLoopType [TICK]` - Sets the type of loop.
+   - `loopType [TICK]` - Sets the type of loop.
    - `modifyPlayer [target_player] [nickname] [skin]` - Changes a looped player's nickname and skin.
    - **toggles**
      - `trackTimeOfDay [true]` - Toggles tracking the time of day during loops.
