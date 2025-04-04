@@ -260,7 +260,27 @@ public class Commands {
                                                     context.getSource().sendMessage(Text.literal("Tracking chat is set to: " + newTrackChat));
                                                     LOGGER.info("Tracking chat set to {}", newTrackChat);
                                                     return 1;
-                                                }))))
+                                                })))
+                                .then(CommandManager.literal("hurtLoopedPlayers")
+                                        .requires(source -> source.hasPermissionLevel(2))
+                                        .executes(context -> {
+                                            context.getSource().sendMessage(Text.literal("Hurting looped players is set to: " + mod.hurtLoopedPlayers));
+                                            return 1;
+                                        })
+                                        .then(CommandManager.argument("value", BoolArgumentType.bool())
+                                                .executes(context -> {
+                                                    boolean newHurtLoopedPlayers = BoolArgumentType.getBool(context, "value");
+                                                    mod.hurtLoopedPlayers = newHurtLoopedPlayers;
+                                                    mod.config.hurtLoopedPlayers = newHurtLoopedPlayers;
+                                                    mod.config.save();
+                                                    
+                                                    mod.executeCommand("mocap settings playback invulnerable_playback " + !newHurtLoopedPlayers);
+                                                    
+                                                    context.getSource().sendMessage(Text.literal("Hurting looped players is set to: " + newHurtLoopedPlayers));
+                                                    LOGGER.info("Hurting looped players set to {}", newHurtLoopedPlayers);
+                                                    return 1;
+                                                })))
+                        )
 
                 .then(CommandManager.literal("reset")
                         .requires(source -> source.hasPermissionLevel(2))

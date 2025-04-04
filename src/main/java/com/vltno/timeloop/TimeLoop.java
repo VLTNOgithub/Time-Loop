@@ -49,6 +49,7 @@ public class TimeLoop implements ModInitializer {
 	public boolean trackItems;
 	public LoopTypes loopType;
 	public boolean trackChat;
+	public boolean hurtLoopedPlayers;
 
 	// The configuration object loaded from disk
 	public TimeLoopConfig config;
@@ -105,6 +106,7 @@ public class TimeLoop implements ModInitializer {
 			trackItems = config.trackItems;
 			loopType = config.loopType;
 			trackChat = config.trackChat;
+			hurtLoopedPlayers = config.hurtLoopedPlayers;
 			
 			loopSceneManager.setRecordingPlayers(config.recordingPlayers);
 			
@@ -120,6 +122,7 @@ public class TimeLoop implements ModInitializer {
 			executeCommand("mocap settings recording start_instantly true");
 			executeCommand("mocap settings recording on_death continue_synced");
 			executeCommand("mocap settings recording chat_recording " + trackChat);
+			executeCommand("mocap settings playback invulnerable_playback " + !hurtLoopedPlayers);
 			executeCommand("mocap settings recording entity_tracking_distance 1");
 			
 			updateEntitiesToTrack(trackItems);
