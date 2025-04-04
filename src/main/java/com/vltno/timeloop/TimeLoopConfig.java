@@ -28,6 +28,7 @@ public class TimeLoopConfig {
     public boolean displayTimeInTicks = false;
     public boolean trackItems = false;
     public LoopTypes loopType = LoopTypes.TICKS;
+    public boolean trackChat = false;
 
     public Map<String, PlayerData> recordingPlayers = new HashMap<>();
 
@@ -57,12 +58,6 @@ public class TimeLoopConfig {
         if (config == null) {
             config = new TimeLoopConfig();
             System.err.println("Config file not found or invalid. Generating a default configuration.");
-        }
-
-        // Validate recordingPlayers field and provide defaults if necessary
-        if (config.recordingPlayers == null || !(config.recordingPlayers instanceof Map)) {
-            System.err.println("Invalid or missing recordingPlayers data in config. Initializing with an empty map.");
-            config.recordingPlayers = new HashMap<>();
         }
 
         config.save();

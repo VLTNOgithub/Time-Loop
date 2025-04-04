@@ -240,6 +240,26 @@ public class Commands {
                                                     context.getSource().sendMessage(Text.literal("Showing loop info is set to: " + newShowLoopInfo));
                                                     LOGGER.info("Show loop info set to {}", newShowLoopInfo);
                                                     return 1;
+                                                })))
+                                
+                                .then(CommandManager.literal("trackChat")
+                                        .requires(source -> source.hasPermissionLevel(2))
+                                        .executes(context -> {
+                                            context.getSource().sendMessage(Text.literal("Tracking chat is set to: " + mod.trackChat));
+                                            return 1;
+                                        })
+                                        .then(CommandManager.argument("value", BoolArgumentType.bool())
+                                                .executes(context -> {
+                                                    boolean newTrackChat = BoolArgumentType.getBool(context, "value");
+                                                    mod.trackChat = newTrackChat;
+                                                    mod.config.trackChat = newTrackChat;
+                                                    mod.config.save();
+                                                    
+                                                    mod.executeCommand("mocap settings recording chat_recording " + newTrackChat);
+                                                    
+                                                    context.getSource().sendMessage(Text.literal("Tracking chat is set to: " + newTrackChat));
+                                                    LOGGER.info("Tracking chat set to {}", newTrackChat);
+                                                    return 1;
                                                 }))))
 
                 .then(CommandManager.literal("reset")
