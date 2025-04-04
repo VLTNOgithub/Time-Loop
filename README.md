@@ -30,6 +30,8 @@ Simply use commands to configure the loop.
      - `trackItems [false]` - Toggles tracking items during loops.
      - `showLoopInfo [true]` - Toggles a bar at the top of the screen showing the amount of ticks/time left until the next loop.
      - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the Progaress bar.
+     - `trackChat [false]` - Toggles tracking chat during loops.
+     - `hurtLoopedPlayers [false]` - Toggles being able to hit looped players.
 
 # LoopType Options
  - `TICK` (Loops every `setLength` ticks)
