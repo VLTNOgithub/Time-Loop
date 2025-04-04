@@ -69,11 +69,20 @@ java {
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
+task openBuildDir {
+	doLast {
+		def buildDir = file("${layout.buildDirectory.get().asFile.absolutePath}/libs").absolutePath
+		def command = ['explorer', buildDir]
+		new ProcessBuilder(command).start()
+	}
+}
+
 jar {
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
 	}
 	exclude "assets/time-loop/icon.psd"
+	finalizedBy openBuildDir
 }
 
 // configure the maven publication
