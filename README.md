@@ -29,7 +29,7 @@ Simply use commands to configure the loop.
      - `trackTimeOfDay [true]` - Toggles tracking the time of day during loops.
      - `trackItems [false]` - Toggles tracking items during loops.
      - `showLoopInfo [true]` - Toggles a bar at the top of the screen showing the amount of ticks/time left until the next loop.
-     - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the progress bar.
+     - `displayTimeInTicks [false]` - Displays the ticks instead of HH:MM:SS on the info bar.
      - `trackChat [false]` - Toggles tracking chat during loops.
      - `hurtLoopedPlayers [false]` - Toggles being able to hit looped players.
 
