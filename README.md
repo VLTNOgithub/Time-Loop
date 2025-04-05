@@ -7,7 +7,7 @@ A mod that 'loops' time by using the Motion Capture Mod.
 
 # Installation
 **Requires Motion Capture 1.4 Alpha 8 and Minecraft 1.21.1**
-https://modrinth.com/mod/motion-capture/version/1.4-alpha-7-fabric-1.21.1
+https://modrinth.com/mod/motion-capture/version/1.4-alpha-8-fabric-1.21.1
 
 The mod works in singleplayer and multiplayer.
 
