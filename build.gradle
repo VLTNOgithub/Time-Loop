@@ -72,8 +72,12 @@ java {
 task openBuildDir {
 	doLast {
 		def buildDir = file("${layout.buildDirectory.get().asFile.absolutePath}/libs").absolutePath
-		def command = ['explorer', buildDir]
-		new ProcessBuilder(command).start()
+		if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+			def command = ['explorer', buildDir]
+			new ProcessBuilder(command).start()
+		} else {
+			println "Skipping openBuildDir task as it is not running on Windows."
+		}
 	}
 }
 
