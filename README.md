@@ -6,7 +6,7 @@ A mod that 'loops' time by using the Motion Capture Mod.
 *Motion Capture mod by mt1006. Inspired by [this Tombino video](https://www.youtube.com/watch?v=i602-oh0a0c). Original datapack by Penguin Mafia. Fabric version by Luigi & VLTNO.*
 
 # Installation
-**Requires Motion Capture 1.4 Alpha 7 and Minecraft 1.21.1**
+**Requires Motion Capture 1.4 Alpha 8 and Minecraft 1.21.1**
 https://modrinth.com/mod/motion-capture/version/1.4-alpha-7-fabric-1.21.1
 
 The mod works in singleplayer and multiplayer.
