@@ -40,13 +40,11 @@ Simply use commands to configure the loop.
  - `DEATH` (Loops when you die)
 
 # Known Issues
- - Dying stops the player from looping
  - You can see spectators' held item and worn armour
  - If the loop starts before a player joins, they cannot see the loops
  - Loops don't work through dimensions
 
 ### Issue Links
-https://github.com/mt1006/mc-mocap-mod/issues/52
 https://github.com/mt1006/mc-mocap-mod/issues/53
 https://github.com/mt1006/mc-mocap-mod/issues/56
 https://github.com/mt1006/mc-mocap-mod/issues/57
