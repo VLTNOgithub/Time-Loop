@@ -3,7 +3,7 @@ name: Suggestion
 about: Suggest an idea for the mod
 title: "[SUGGESTION] "
 labels: suggestion
-assignees: VLTNOgithub
+assignees: ''
 
 ---
 
