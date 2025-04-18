@@ -7,11 +7,12 @@ assignees: ''
 
 ---
 
-### **Versions**
+### **Information**
 **OS:** 
-**Minecraft:** 
-**Mocap:** 
-**Time Loop:** 
+**Minecraft Version:** 
+**Mocap Version:** 
+**Time Loop Version:** 
+**Client/Server:** 
 
 ### **Describe the bug**
 A clear and concise description of what the bug is.
@@ -28,5 +29,5 @@ A clear and concise description of what you expected to happen.
 ### **Screenshots (if applicable)**
 Add screenshots to help explain your problem.
 
-**Additional context**
-Add any other context about the problem here. For example, **any mods that might cause the issue**.
+### **Logs**
+Upload your Minecraft logs to [mclo.gs](https://www.mclo.gs) and paste the link here.
