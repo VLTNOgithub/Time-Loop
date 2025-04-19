@@ -7,7 +7,7 @@ version = project.mod_version
 group = project.mod_group
 
 base {
-	archivesName = project.mod_jar_name
+	archivesName = "${mod_jar_name}-${project.name.toUpperCase()}-${minecraft_version}"
 }
 
 repositories {
