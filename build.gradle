@@ -1,108 +1,71 @@
-plugins {
-	id 'fabric-loom' version '1.9-SNAPSHOT'
-	id 'maven-publish'
-}
-
-version = project.mod_version
-group = project.mod_group
-
-base {
-	archivesName = project.mod_jar_name
-}
-
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-}
-
-dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
-}
-
-processResources {
-	inputs.property "version", project.version
-	
-	var replaceProperties = [
-			"mod_id": mod_id,
-			"mod_version": mod_version,
-			"mod_name": mod_name,
-			"mod_description": mod_description,
-			"mod_author_1": mod_author_1,
-			"mod_author_2": mod_author_2,
-			"mod_homepage": mod_homepage,
-			"mod_source": mod_source,
-			"mod_issues": mod_issues,
-			"mod_license": mod_license,
-			"mod_mocap_version": mod_mocap_version,
-			
-			"mod_group": mod_group,
-			"mod_jar_name": mod_jar_name,
-	]
-	
-	filesMatching("fabric.mod.json") {
-		expand replaceProperties
-	}
-	inputs.properties replaceProperties
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
-}
-
-task openBuildDir {
-	doLast {
-		def buildDir = file("${layout.buildDirectory.get().asFile.absolutePath}/libs").absolutePath
-		if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
-			def command = ['explorer', buildDir]
-			new ProcessBuilder(command).start()
-		} else {
-			println "Skipping openBuildDir task as it is not running on Windows."
-		}
-	}
-}
-
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}"}
-	}
-	exclude "assets/time-loop/icon.psd"
-	finalizedBy openBuildDir
-}
-
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = mod_jar_name
-			from components.java
+subprojects {
+	task openBuildDir {
+		doLast {
+			def buildDir = file("${layout.buildDirectory.get().asFile.absolutePath}/libs").absolutePath
+			if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+				def command = ['explorer', buildDir]
+				new ProcessBuilder(command).start()
+			} else {
+				println "Skipping openBuildDir task as it is not running on Windows."
+			}
 		}
 	}
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+	apply plugin: "java"
+	java.toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+	
+	base {
+		archivesName = "${mod_jar_name}-${project.name.toUpperCase()}-${minecraft_version}"
+	}
+
+	processResources {
+		var replaceProperties =
+			[
+				"mod_id": mod_id,
+				"mod_version": mod_version,
+				"mod_name": mod_name,
+				"mod_description": mod_description,
+				"mod_author_1": mod_author_1,
+				"mod_author_2": mod_author_2,
+				"mod_homepage": mod_homepage,
+				"mod_source": mod_source,
+				"mod_issues": mod_issues,
+				"mod_license": mod_license,
+				"mod_mocap_version": mod_mocap_version,
+
+				"mod_group": mod_group,
+				"mod_jar_name": mod_jar_name,
+				
+				"minecraft_version"         : minecraft_version,
+				"java_version"              : java_version,
+				"version_range_fabric"      : version_range_fabric,
+				"version_range_forge"       : version_range_forge,
+				"version_range_neoforge"    : version_range_neoforge,
+				"fabric_loader_version"     : fabric_loader_version,
+				"fabric_api_version"        : fabric_api_version,
+				"forge_version"             : forge_version,
+				"neoforge_version"          : neoforge_version,
+			]
+
+		filesMatching(["pack.mcmeta", "fabric.mod.json", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "*.mixins.json"]) {
+			expand replaceProperties
+		}
+		inputs.properties replaceProperties
+	}
+
+	jar {
+		exclude "assets/time-loop/icon.psd"
+		finalizedBy openBuildDir
+	}
+	
+	tasks.withType(JavaCompile).configureEach { it.options.encoding = "UTF-8" }
+
+	if (project.name != "common") {
+		dependencies {
+			compileOnly project(":common")
+		}
+
+		processResources { from project(":common").sourceSets.main.resources }
+		tasks.named("compileJava", JavaCompile) { source project(":common").sourceSets.main.allSource }
 	}
 }
