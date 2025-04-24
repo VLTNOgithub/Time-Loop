@@ -1,9 +1,13 @@
 package com.vltno.timeloop;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -12,24 +16,36 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 public class Commands {
-    private static final Logger LOGGER = LoggerFactory.getLogger("LoopCommands");
-    private final TimeLoop mod;
+    public static final Logger LOOP_COMMANDS_LOGGER = LoggerFactory.getLogger("LoopCommands");
+    public static TimeLoop mod = null;
 
     public Commands(TimeLoop mod) {
-        this.mod = mod;
+        Commands.mod = mod;
+    }
+
+    /**
+     * Creates a new argument. Intended to be imported statically. The benefit of this over the brigadier {@link RequiredArgumentBuilder#argument} method is that it is typed to {@link CommandSource}.
+     */
+    public static <T> RequiredArgumentBuilder<ServerCommandSource, T> argument(String name, ArgumentType<T> type) {
+        return RequiredArgumentBuilder.argument(name, type);
     }
     
-    public void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public static int returnText(CommandContext<ServerCommandSource> context, String text) {
+        context.getSource().sendMessage(Text.literal(text));
+        return 1;
+    }
+    
+    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("loop")
                 .then(CommandManager.literal("start")
                         .requires(source -> source.hasPermissionLevel(2))
                         .executes(context -> {
                             if (!mod.isLooping) {
                                 mod.startTimeOfDay = mod.serverWorld.getTimeOfDay();
-                                mod.config.startTimeOfDay = mod.startTimeOfDay;
+                                TimeLoop.config.startTimeOfDay = mod.startTimeOfDay;
                                 mod.startLoop();
                                 context.getSource().sendMessage(Text.literal("Loop started!"));
-                                LOGGER.info("loop started");
+                                LOOP_COMMANDS_LOGGER.info("loop started");
                                 return 1;
                             }
                             context.getSource().sendMessage(Text.literal("Loop already running!"));
@@ -42,7 +58,7 @@ public class Commands {
                             if (mod.isLooping) {
                                 mod.stopLoop();
                                 context.getSource().sendMessage(Text.literal("Loop stopped"));
-                                LOGGER.info("Loop stopped");
+                                LOOP_COMMANDS_LOGGER.info("Loop stopped");
                                 return 1;
                             }
                             else {
@@ -58,7 +74,7 @@ public class Commands {
                                     "Loop is active. Current iteration: " + mod.loopIteration + extras:
                                     "Loop is inactive. Last iteration: " + mod.loopIteration + extras;
                             context.getSource().sendMessage(Text.literal(status));
-                            LOGGER.info("Status requested: {}", status);
+                            LOOP_COMMANDS_LOGGER.info("Status requested: {}", status);
                             return 1;
                         }))
 
@@ -78,16 +94,16 @@ public class Commands {
                                         .executes(context -> {
                                             LoopTypes newLoopType = LoopTypes.valueOf(StringArgumentType.getString(context, "loopType"));
                                             mod.loopType = newLoopType;
-                                            mod.config.loopType = newLoopType;
-                                            mod.config.save();
+                                            TimeLoop.config.loopType = newLoopType;
+                                            TimeLoop.config.save();
 
                                             // Hide BossBar when loopType is not Ticks or TimeOfDay
                                             if (mod.showLoopInfo) {
-                                                mod.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
+                                                TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
                                             }
 
                                             context.getSource().sendMessage(Text.literal("Looping type is set to: " + newLoopType));
-                                            LOGGER.info("Loop type set to {}", newLoopType);
+                                            LOOP_COMMANDS_LOGGER.info("Loop type set to {}", newLoopType);
                                             return 1;
                                         })))
 
@@ -102,15 +118,15 @@ public class Commands {
                                         .executes(context -> {
                                             int newTicks = IntegerArgumentType.getInteger(context, "ticks");
                                             mod.loopLengthTicks = newTicks;
-                                            mod.config.loopLengthTicks = newTicks;
+                                            TimeLoop.config.loopLengthTicks = newTicks;
 
                                             mod.ticksLeft = newTicks;
-                                            mod.config.ticksLeft = newTicks;
+                                            TimeLoop.config.ticksLeft = newTicks;
 
-                                            mod.config.save();
+                                            TimeLoop.config.save();
                                             
                                             context.getSource().sendMessage(Text.literal("Loop length is set to: " + newTicks + " ticks"));
-                                            LOGGER.info("Loop length set to {} ticks", newTicks);
+                                            LOOP_COMMANDS_LOGGER.info("Loop length set to {} ticks", newTicks);
                                             return 1;
                                         })))
 
@@ -124,10 +140,10 @@ public class Commands {
                                         .executes(context -> {
                                             int maxLoops = IntegerArgumentType.getInteger(context, "value");
                                             mod.maxLoops = maxLoops;
-                                            mod.config.maxLoops = maxLoops;
-                                            mod.config.save();
+                                            TimeLoop.config.maxLoops = maxLoops;
+                                            TimeLoop.config.save();
                                             context.getSource().sendMessage(Text.literal("Max loops is set to: " + maxLoops));
-                                            LOGGER.info("Max loops set to {}", maxLoops);
+                                            LOOP_COMMANDS_LOGGER.info("Max loops set to {}", maxLoops);
                                             return 1;
                                         })))
 
@@ -141,10 +157,10 @@ public class Commands {
                                         .executes(context -> {
                                             int newTime = IntegerArgumentType.getInteger(context, "time");
                                             mod.timeSetting = newTime;
-                                            mod.config.timeSetting = newTime;
-                                            mod.config.save();
+                                            TimeLoop.config.timeSetting = newTime;
+                                            TimeLoop.config.save();
                                             context.getSource().sendMessage(Text.literal("Time of day is set to: " + newTime));
-                                            LOGGER.info("Time of day set to {}", newTime);
+                                            LOOP_COMMANDS_LOGGER.info("Time of day set to {}", newTime);
                                             return 1;
                                         })))
                         
@@ -174,11 +190,11 @@ public class Commands {
                                                 .executes(context -> {
                                                     boolean newTrackTimeOfDay = BoolArgumentType.getBool(context, "value");
                                                     mod.trackTimeOfDay = newTrackTimeOfDay;
-                                                    mod.config.trackTimeOfDay = newTrackTimeOfDay;
-                                                    mod.config.save();
+                                                    TimeLoop.config.trackTimeOfDay = newTrackTimeOfDay;
+                                                    TimeLoop.config.save();
 
                                                     context.getSource().sendMessage(Text.literal("Track time of day is set to: " + newTrackTimeOfDay));
-                                                    LOGGER.info("Track time of day set to {}", newTrackTimeOfDay);
+                                                    LOOP_COMMANDS_LOGGER.info("Track time of day set to {}", newTrackTimeOfDay);
                                                     return 1;
                                                 })))
 
@@ -192,13 +208,13 @@ public class Commands {
                                                 .executes(context -> {
                                                     boolean newTrackItems = BoolArgumentType.getBool(context, "value");
                                                     mod.trackItems = newTrackItems;
-                                                    mod.config.trackItems = newTrackItems;
-                                                    mod.config.save();
+                                                    TimeLoop.config.trackItems = newTrackItems;
+                                                    TimeLoop.config.save();
 
                                                     mod.updateEntitiesToTrack(newTrackItems);
 
                                                     context.getSource().sendMessage(Text.literal("Track items is set to: " + newTrackItems));
-                                                    LOGGER.info("Track items set to {}", newTrackItems);
+                                                    LOOP_COMMANDS_LOGGER.info("Track items set to {}", newTrackItems);
                                                     return 1;
                                                 })))
 
@@ -212,11 +228,11 @@ public class Commands {
                                                 .executes(context -> {
                                                     boolean newDisplayTimeInTicks = BoolArgumentType.getBool(context, "value");
                                                     mod.displayTimeInTicks = newDisplayTimeInTicks;
-                                                    mod.config.displayTimeInTicks = newDisplayTimeInTicks;
-                                                    mod.config.save();
+                                                    TimeLoop.config.displayTimeInTicks = newDisplayTimeInTicks;
+                                                    TimeLoop.config.save();
 
                                                     context.getSource().sendMessage(Text.literal("Display time in ticks is set to: " + newDisplayTimeInTicks));
-                                                    LOGGER.info("Display time in ticks set to {}", newDisplayTimeInTicks);
+                                                    LOOP_COMMANDS_LOGGER.info("Display time in ticks set to {}", newDisplayTimeInTicks);
                                                     return 1;
                                                 })))
 
@@ -230,15 +246,15 @@ public class Commands {
                                                 .executes(context -> {
                                                     boolean newShowLoopInfo = BoolArgumentType.getBool(context, "value");
                                                     mod.showLoopInfo = newShowLoopInfo;
-                                                    mod.config.showLoopInfo = newShowLoopInfo;
-                                                    mod.config.save();
+                                                    TimeLoop.config.showLoopInfo = newShowLoopInfo;
+                                                    TimeLoop.config.save();
 
                                                     if (newShowLoopInfo) {
-                                                        mod.loopBossBar.visible(mod.loopType.equals(LoopTypes.TICKS) || mod.loopType.equals(LoopTypes.TIME_OF_DAY));
+                                                        TimeLoop.loopBossBar.visible(mod.loopType.equals(LoopTypes.TICKS) || mod.loopType.equals(LoopTypes.TIME_OF_DAY));
                                                     }
 
                                                     context.getSource().sendMessage(Text.literal("Showing loop info is set to: " + newShowLoopInfo));
-                                                    LOGGER.info("Show loop info set to {}", newShowLoopInfo);
+                                                    LOOP_COMMANDS_LOGGER.info("Show loop info set to {}", newShowLoopInfo);
                                                     return 1;
                                                 })))
                                 
@@ -252,13 +268,13 @@ public class Commands {
                                                 .executes(context -> {
                                                     boolean newTrackChat = BoolArgumentType.getBool(context, "value");
                                                     mod.trackChat = newTrackChat;
-                                                    mod.config.trackChat = newTrackChat;
-                                                    mod.config.save();
+                                                    TimeLoop.config.trackChat = newTrackChat;
+                                                    TimeLoop.config.save();
                                                     
-                                                    mod.executeCommand("mocap settings recording chat_recording " + newTrackChat);
+                                                    TimeLoop.executeCommand("mocap settings recording chat_recording " + newTrackChat);
                                                     
                                                     context.getSource().sendMessage(Text.literal("Tracking chat is set to: " + newTrackChat));
-                                                    LOGGER.info("Tracking chat set to {}", newTrackChat);
+                                                    LOOP_COMMANDS_LOGGER.info("Tracking chat set to {}", newTrackChat);
                                                     return 1;
                                                 })))
                                 .then(CommandManager.literal("hurtLoopedPlayers")
@@ -271,13 +287,13 @@ public class Commands {
                                                 .executes(context -> {
                                                     boolean newHurtLoopedPlayers = BoolArgumentType.getBool(context, "value");
                                                     mod.hurtLoopedPlayers = newHurtLoopedPlayers;
-                                                    mod.config.hurtLoopedPlayers = newHurtLoopedPlayers;
-                                                    mod.config.save();
+                                                    TimeLoop.config.hurtLoopedPlayers = newHurtLoopedPlayers;
+                                                    TimeLoop.config.save();
                                                     
-                                                    mod.executeCommand("mocap settings playback invulnerable_playback " + !newHurtLoopedPlayers);
+                                                    TimeLoop.executeCommand("mocap settings playback invulnerable_playback " + !newHurtLoopedPlayers);
                                                     
                                                     context.getSource().sendMessage(Text.literal("Hurting looped players is set to: " + newHurtLoopedPlayers));
-                                                    LOGGER.info("Hurting looped players set to {}", newHurtLoopedPlayers);
+                                                    LOOP_COMMANDS_LOGGER.info("Hurting looped players set to {}", newHurtLoopedPlayers);
                                                     return 1;
                                                 })))
                         )
@@ -288,32 +304,32 @@ public class Commands {
                             mod.stopLoop();
                             
                             mod.startTimeOfDay = 0;
-                            mod.config.startTimeOfDay = 0;
+                            TimeLoop.config.startTimeOfDay = 0;
                             
                             mod.timeSetting = 13000;
-                            mod.config.timeSetting = 0;
+                            TimeLoop.config.timeSetting = 0;
                             
                             mod.ticksLeft = mod.loopLengthTicks;
-                            mod.config.ticksLeft = mod.config.loopLengthTicks;
+                            TimeLoop.config.ticksLeft = TimeLoop.config.loopLengthTicks;
                             
                             mod.trackItems = false;
-                            mod.config.trackItems = false;
+                            TimeLoop.config.trackItems = false;
                             
                             mod.loopType = LoopTypes.TICKS;
-                            mod.config.loopType = LoopTypes.TICKS;
+                            TimeLoop.config.loopType = LoopTypes.TICKS;
                             
                             mod.displayTimeInTicks = false;
-                            mod.config.displayTimeInTicks = false;
+                            TimeLoop.config.displayTimeInTicks = false;
                             
-                            mod.executeCommand("mocap playback stop_all");
-                            mod.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
-                                mod.executeCommand(String.format("mocap scenes remove %s", playerSceneName));
-                                mod.executeCommand(String.format("mocap scenes add %s", playerSceneName));
+                            TimeLoop.executeCommand("mocap playback stop_all");
+                            TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
+                                TimeLoop.executeCommand(String.format("mocap scenes remove %s", playerSceneName));
+                                TimeLoop.executeCommand(String.format("mocap scenes add %s", playerSceneName));
                             });
 
                             mod.loopIteration = 0;
-                            mod.config.loopIteration = 0;
-                            mod.config.save();
+                            TimeLoop.config.loopIteration = 0;
+                            TimeLoop.config.save();
                             context.getSource().sendMessage(Text.literal("Loop reset!"));
                             return 1;
                         }))));
