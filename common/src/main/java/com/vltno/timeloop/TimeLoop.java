@@ -50,17 +50,14 @@ public class TimeLoop {
 
 	public static boolean isDedicatedServer;
 
-	public static TimeLoopLoaderInterface loaderInterface;
-
-	public static void init(boolean isDedicatedServer, TimeLoopLoaderInterface loaderInterface) {
+	public static void init(boolean isDedicatedServer) {
 		TimeLoop.isDedicatedServer = isDedicatedServer;
-		TimeLoop.loaderInterface = loaderInterface;
 
 		loopBossBar = new LoopBossBar();
-		
+
 		LOOP_LOGGER.info("Initializing TimeLoop mod (Common)");
 	}
-	
+
 	/**
 	 * Executes a minecraft chat command.
 	 */
@@ -103,11 +100,11 @@ public class TimeLoop {
 		config.save();
 		LOOP_LOGGER.info("Completed loop iteration {}", loopIteration - 1);
 	}
-	
+
 	/**
 	 * Starts and initialises the loop.
 	 */
-	public void startLoop() {
+	public static void startLoop() {
 		if (isLooping) {
 			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
@@ -154,7 +151,7 @@ public class TimeLoop {
 			}
 		});
 	}
-	
+
 	/**
 	 * Stops the loop.
 	 */
@@ -192,7 +189,7 @@ public class TimeLoop {
 		return exists;
 	}
 
-	public void modifyPlayerAttributes(String targetPlayerName, String newPlayerNickname, String newSkin) {
+	public static void modifyPlayerAttributes(String targetPlayerName, String newPlayerNickname, String newSkin) {
 		String playerSceneName = loopSceneManager.getPlayerSceneName(targetPlayerName);
 		executeCommand(String.format("mocap scenes modify .%s %s player_skin skin_from_player %s", playerSceneName, newPlayerNickname, newSkin));
 
@@ -218,7 +215,7 @@ public class TimeLoop {
 		executeCommand(String.format("mocap settings recording track_entities %s", entitiesToTrack));
 		executeCommand(String.format("mocap settings playback play_entities %s", entitiesToTrack));
 	}
-	
+
 	public static void updateInfoBar(int time, int timeLeft) {
 		if (showLoopInfo && isLooping) {
 			if (displayTimeInTicks) { loopBossBar.setBossBarName("Time Left: " + timeLeft); }

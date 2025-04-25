@@ -11,50 +11,33 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.server.world.ServerWorld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.minecraft.server.MinecraftServer;
 
-import java.nio.file.Path;
-import java.util.Optional;
-
-public class TimeLoopFabric extends TimeLoop implements ModInitializer, TimeLoopLoaderInterface {
+public class TimeLoopFabric implements ModInitializer {
     public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
-    private Commands commands;
-    private static MinecraftServer server;
-    public ServerWorld serverWorld;
-
-    public LoopBossBar loopBossBar;
-
-    // The configuration object loaded from disk
-    public TimeLoopConfig config;
-
-    // Get the world folder path for config/recording loading
-    private Path worldFolder;
 
     public static final boolean isDedicatedServer = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
-    
+
     @Override
     public void onInitialize() {
         LOOP_LOGGER.info("Initializing TimeLoop mod (Fabric)");
-        
-        TimeLoop.init(isDedicatedServer, this);
-        
+
+        TimeLoop.init(isDedicatedServer);
+
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             // Only register commands on the logical server
             if (environment.dedicated || environment.integrated) {
-                TimeLoopCommand.register(dispatcher);
+                Commands.register(dispatcher);
             }
         });
 
         EntitySleepEvents.STOP_SLEEPING.register(EntitySleepFabricEvent::onStopSleeping);
-        
+
         ServerLifecycleEvents.SERVER_STARTED.register(LifecycleFabricEvent::onServerStart);
-        
+
         ServerLifecycleEvents.SERVER_STOPPING.register(LifecycleFabricEvent::onServerStopping);
-        
+
         ServerPlayConnectionEvents.JOIN.register(PlayConnectionFabricEvent::onJoin);
 
         ServerPlayConnectionEvents.DISCONNECT.register(PlayConnectionFabricEvent::onDisconnect);
@@ -64,16 +47,5 @@ public class TimeLoopFabric extends TimeLoop implements ModInitializer, TimeLoop
         ServerTickEvents.END_SERVER_TICK.register(TickFabricEvent::onEndServerTick);
 
         LOOP_LOGGER.info("TimeLoop mod initialized successfully (Fabric)");
-    }
-
-    @Override public String getLoaderName()
-    {
-        return "Fabric";
-    }
-
-    @Override public String getModVersion()
-    {
-        Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer("time-loop");
-        return modContainer.isPresent() ? modContainer.get().getMetadata().getVersion().getFriendlyString() : "[unknown]";
     }
 }
