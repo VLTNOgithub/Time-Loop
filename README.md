@@ -20,10 +20,9 @@ Simply use commands to configure the loop.
  - `reset` - Reset the loop and go back to the first recording. **This doesn't delete the recordings as of yet but it's being worked on.**
  - `status` - Shows the status of the loop in chat.
  - **settings**
-   - `maxLoops [0]` - Sets the maximum amount of loops. 0 is infinite.
+   - `setLoopType [TICK]` - Sets the type of loop.
    - `setLength [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
    - `setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
-   - `loopType [TICK]` - Sets the type of loop.
    - `modifyPlayer [target_player] [nickname] [skin]` - Changes a looped player's nickname and skin.
    - **toggles**
      - `trackTimeOfDay [true]` - Toggles tracking the time of day during loops.
