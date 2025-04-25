@@ -1,8 +1,8 @@
 package com.vltno.timeloop.fabric.events;
 
-import net.minecraft.entity.LivingEntity;
 import com.vltno.timeloop.events.EntitySleepEvent;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.BlockPos;
 
 public class EntitySleepFabricEvent {
     public static void onStopSleeping(LivingEntity entity, BlockPos sleepingPos) {

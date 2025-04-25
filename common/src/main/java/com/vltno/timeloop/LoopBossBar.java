@@ -1,20 +1,16 @@
 package com.vltno.timeloop;
 
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.entity.boss.BossBar.Color;
-import net.minecraft.entity.boss.BossBar.Style;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.world.BossEvent.BossBarColor;
+import net.minecraft.world.BossEvent.BossBarOverlay;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 
 public class LoopBossBar {
-    private static final Logger LOGGER = LoggerFactory.getLogger("LoopCommands");
-    private final ServerBossBar bossBar;
-
+    private final ServerBossEvent bossBar;
 
     public LoopBossBar() {
-        bossBar = new ServerBossBar(Text.literal("TimeLoop"), Color.YELLOW, Style.PROGRESS);
+        bossBar = new ServerBossEvent(Component.literal("TimeLoop"), BossBarColor.YELLOW, BossBarOverlay.PROGRESS);
     }
 
     public void visible(boolean bool) {
@@ -22,20 +18,27 @@ public class LoopBossBar {
     }
 
     public void setBossBarName(String bossBarName) {
-        bossBar.setName(Text.literal(bossBarName));
+        bossBar.setName(Component.literal(bossBarName));
     }
 
     public void setBossBarPercentage(int whole, int part) {
-        bossBar.setPercent(1.0f - ((float) part / whole));
+        if (whole <= 0) {
+            bossBar.setProgress(1.0f);
+            return;
+        }
+        // Calculate progress (fraction remaining)
+        float progress = 1.0f - ((float) part / whole);
+        // Clamp progress between 0.0 and 1.0
+        bossBar.setProgress(Math.max(0.0f, Math.min(1.0f, progress)));
     }
 
-    public void addPlayer(ServerPlayerEntity player) {
-        LOGGER.info("Adding player: {}", player.getName().getString());
+    public void addPlayer(ServerPlayer player) {
+        TimeLoop.LOOP_LOGGER.info("Adding player to boss bar: {}", player.getName().getString());
         bossBar.addPlayer(player);
     }
 
-    public void removePlayer(ServerPlayerEntity player) {
-        LOGGER.info("Removing player: {}", player.getName().getString());
+    public void removePlayer(ServerPlayer player) {
+        TimeLoop.LOOP_LOGGER.info("Removing player from boss bar: {}", player.getName().getString());
         bossBar.removePlayer(player);
     }
 }

@@ -3,8 +3,11 @@ package com.vltno.timeloop;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +20,8 @@ import java.util.List;
 public class TimeLoop {
 	public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
 	public static MinecraftServer server;
-	public static ServerWorld serverWorld;
-
+	public static ServerLevel serverLevel;
+	
 	public static LoopBossBar loopBossBar;
 
 	// These fields will be initialized from the configuration file.
@@ -62,16 +65,27 @@ public class TimeLoop {
 	 * Executes a minecraft chat command.
 	 */
 	public static void executeCommand(String command) {
-		if (server != null) {
-			LOOP_LOGGER.info("Executing command: {}", command);
-			// Execute the command without expecting a return value.
-			server.getCommandManager().executeWithPrefix(server.getCommandSource(), command);
-			LOOP_LOGGER.info("Command executed successfully: {}", command);
-			// For commands like "mocap recording save" you might need an alternative method
-			// to verify success (for example, by checking for expected side effects).
-		} else {
+		if (server == null) {
 			LOOP_LOGGER.error("Attempted to execute command while server is null: {}", command);
 		}
+		
+		server.execute(() -> {
+			try {
+				Commands commands = server.getCommands();
+
+				CommandSourceStack commandSource = server.createCommandSourceStack();
+
+				LOOP_LOGGER.info("Executing command: {}", command);
+
+				commands.getDispatcher().execute(command, commandSource);
+
+				LOOP_LOGGER.info("Command executed successfully: {}", command);
+			} catch (CommandSyntaxException e) {
+				LOOP_LOGGER.error("Failed to execute command '{}' due to syntax error: {}", command, e.getMessage());
+			} catch (Exception e) {
+				LOOP_LOGGER.error("An unexpected error occurred while executing command '{}': {}", command, e.getMessage(), e);
+			}
+		});
 	}
 
 
@@ -83,7 +97,7 @@ public class TimeLoop {
 		saveRecordings();
 		removeOldSceneEntries();
 		startRecordings();
-		if (trackTimeOfDay) { serverWorld.setTimeOfDay(startTimeOfDay); }
+		if (trackTimeOfDay) { serverLevel.setDayTime(startTimeOfDay); }
 		TimeLoop.executeCommand("mocap playback stop_all including_others");
 
 		loopSceneManager.forEachRecordingPlayer(playerData -> {

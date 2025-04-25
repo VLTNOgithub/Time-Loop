@@ -1,15 +1,16 @@
 package com.vltno.timeloop;
 
-import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.StringRepresentable;
+import org.jetbrains.annotations.NotNull;
 
-public enum LoopTypes implements StringIdentifiable {
+public enum LoopTypes implements StringRepresentable {
     TICKS,
     TIME_OF_DAY,
     SLEEP,
     DEATH;
 
     @Override
-    public String asString() {
+    public @NotNull String getSerializedName() {
         return name();
     }
 }

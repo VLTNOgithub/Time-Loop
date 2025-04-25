@@ -42,3 +42,4 @@ replay_*.log
 # misc
 /code_changes.json
 /git_diff_monitor.py
+/neoforge/run/

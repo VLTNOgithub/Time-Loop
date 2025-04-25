@@ -2,75 +2,98 @@ package com.vltno.timeloop.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.vltno.timeloop.Commands;
+import com.vltno.timeloop.LoopCommands;
 import com.vltno.timeloop.LoopTypes;
 import com.vltno.timeloop.TimeLoop;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+// Assuming TimeLoop.serverWorld is now 'net.minecraft.server.level.ServerLevel'
 
 public class BaseCommands {
-    public static void register(LiteralArgumentBuilder<ServerCommandSource> parentBuilder) {
-        parentBuilder.then(CommandManager.literal("start")
+
+    // Note: The parent builder needs to be dispatched by Commands.register(...)
+    // typically in your mod initializer or a dedicated command registration event.
+    public static void register(LiteralArgumentBuilder<CommandSourceStack> parentBuilder) {
+
+        parentBuilder.then(Commands.literal("start")
                 .executes(BaseCommands::start)
-                .requires(source -> source.hasPermissionLevel(2)));
+                .requires(source -> source.hasPermission(2)));
 
-        parentBuilder.then(CommandManager.literal("stop")
+        parentBuilder.then(Commands.literal("stop")
                 .executes(BaseCommands::stop)
-                .requires(source -> source.hasPermissionLevel(2)));
+                .requires(source -> source.hasPermission(2)));
 
-        parentBuilder.then(CommandManager.literal("reset")
+        parentBuilder.then(Commands.literal("reset")
                 .executes(BaseCommands::reset)
-                .requires(source -> source.hasPermissionLevel(2)));
+                .requires(source -> source.hasPermission(2)));
 
-        parentBuilder.then(CommandManager.literal("status")
+        parentBuilder.then(Commands.literal("status")
                 .executes(BaseCommands::status)); // No permission needed
     }
 
-    private static int start(CommandContext<ServerCommandSource> context) {
+    private static int start(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         if (!TimeLoop.isLooping) {
-            TimeLoop.startTimeOfDay = TimeLoop.serverWorld.getTimeOfDay();
+            
+            if (TimeLoop.serverLevel == null) {
+                source.sendFailure(Component.literal("Error: Server world not available yet."));
+                return 0;
+            }
+            TimeLoop.startTimeOfDay = TimeLoop.serverLevel.getDayTime();
             TimeLoop.config.startTimeOfDay = TimeLoop.startTimeOfDay;
             TimeLoop.startLoop();
-            context.getSource().sendMessage(Text.literal("Loop started!"));
-            Commands.LOOP_COMMANDS_LOGGER.info("loop started");
+            
+            source.sendSuccess(() -> Component.literal("Loop started!"), true);
+            LoopCommands.LOOP_COMMANDS_LOGGER.info("loop started");
             return 1;
         }
-        context.getSource().sendMessage(Text.literal("Loop already running!"));
+        source.sendFailure(Component.literal("Loop already running!"));
         return 0;
     }
 
-    private static int stop(CommandContext<ServerCommandSource> context) {
+    private static int stop(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         if (TimeLoop.isLooping) {
             TimeLoop.stopLoop();
-            context.getSource().sendMessage(Text.literal("Loop stopped"));
-            Commands.LOOP_COMMANDS_LOGGER.info("Loop stopped");
+            source.sendSuccess(() -> Component.literal("Loop stopped"), true);
+            LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop stopped");
             return 1;
-        }
-        else {
-            context.getSource().sendMessage(Text.literal("Loop not running"));
+        } else {
+            source.sendFailure(Component.literal("Loop not running"));
         }
         return 0;
     }
 
-    private static int status(CommandContext<ServerCommandSource> context) {
-        String extras = " Looping on " + TimeLoop.loopType + "." + (TimeLoop.isLooping && TimeLoop.loopType == LoopTypes.TICKS ? " Ticks Left: " + TimeLoop.ticksLeft : "") + (TimeLoop.trackItems ? " Tracking items." : "");
-        String status = TimeLoop.isLooping ?
-                "Loop is active. Current iteration: " + TimeLoop.loopIteration + extras:
-                "Loop is inactive. Last iteration: " + TimeLoop.loopIteration + extras;
-        context.getSource().sendMessage(Text.literal(status));
-        Commands.LOOP_COMMANDS_LOGGER.info("Status requested: {}", status);
+    private static int status(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        
+        String status = getString();
+        
+        source.sendSuccess(() -> Component.literal(status), false); 
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Status requested: {}", status);
         return 1;
     }
 
-    private static int reset(CommandContext<ServerCommandSource> context) {
+    private static @NotNull String getString() {
+        String loopTypeName = (TimeLoop.loopType != null) ? TimeLoop.loopType.name() : "UNKNOWN";
+        String extras = " Looping on " + loopTypeName + "." + (TimeLoop.isLooping && TimeLoop.loopType == LoopTypes.TICKS ? " Ticks Left: " + TimeLoop.ticksLeft : "") + (TimeLoop.trackItems ? " Tracking items." : "");
+        return TimeLoop.isLooping ?
+                "Loop is active. Current iteration: " + TimeLoop.loopIteration + extras :
+                "Loop is inactive. Last iteration: " + TimeLoop.loopIteration + extras;
+    }
+
+    private static int reset(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         TimeLoop.stopLoop();
 
+        // Reset logic remains the same internally
         TimeLoop.startTimeOfDay = 0;
         TimeLoop.config.startTimeOfDay = 0;
 
         TimeLoop.timeSetting = 13000;
-        TimeLoop.config.timeSetting = 0;
+        TimeLoop.config.timeSetting = 13000;
 
         TimeLoop.ticksLeft = TimeLoop.loopLengthTicks;
         TimeLoop.config.ticksLeft = TimeLoop.config.loopLengthTicks;
@@ -83,7 +106,7 @@ public class BaseCommands {
 
         TimeLoop.displayTimeInTicks = false;
         TimeLoop.config.displayTimeInTicks = false;
-
+        
         TimeLoop.executeCommand("mocap playback stop_all");
         TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
             TimeLoop.executeCommand(String.format("mocap scenes remove %s", playerSceneName));
@@ -93,7 +116,8 @@ public class BaseCommands {
         TimeLoop.loopIteration = 0;
         TimeLoop.config.loopIteration = 0;
         TimeLoop.config.save();
-        context.getSource().sendMessage(Text.literal("Loop reset!"));
+
+        source.sendSuccess(() -> Component.literal("Loop reset!"), true);
         return 1;
     }
 }

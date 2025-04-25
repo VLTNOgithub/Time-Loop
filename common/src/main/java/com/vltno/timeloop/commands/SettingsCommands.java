@@ -4,73 +4,88 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.vltno.timeloop.Commands;
+import com.vltno.timeloop.LoopCommands;
 import com.vltno.timeloop.LoopTypes;
 import com.vltno.timeloop.TimeLoop;
-import net.minecraft.command.CommandSource;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.Component;
 
 public class SettingsCommands {
 
-    public static void register(LiteralArgumentBuilder<ServerCommandSource> parentBuilder) {
-        LiteralArgumentBuilder<ServerCommandSource> settingsNode = CommandManager.literal("settings")
-                .requires(source -> source.hasPermissionLevel(2)); // Permission for all settings
+    public static void register(LiteralArgumentBuilder<CommandSourceStack> parentBuilder) {
+        LiteralArgumentBuilder<CommandSourceStack> settingsNode = Commands.literal("settings")
+                .requires(source -> source.hasPermission(2));
 
-        settingsNode.then(CommandManager.literal("setLoopType").executes(context -> Commands.returnText(context, "Loop type is set to: " + TimeLoop.loopType))
-                .then(CommandManager.argument("loopType", StringArgumentType.word())
-                        .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder))
+        settingsNode.then(Commands.literal("setLoopType")
+                .executes(context -> {
+                    context.getSource().sendSuccess(() -> Component.literal("Loop type is set to: " + TimeLoop.loopType), false);
+                    return 1;
+                })
+                .then(Commands.argument("loopType", StringArgumentType.word())
+                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder))
                         .executes(SettingsCommands::setLoopType)));
 
-        settingsNode.then(CommandManager.literal("setLength")
-                .executes(context -> Commands.returnText(context, "Loop length is set to: " + TimeLoop.config.loopLengthTicks + " ticks"))
-                .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
+        settingsNode.then(Commands.literal("setLength")
+                .executes(context -> {
+                    context.getSource().sendSuccess(() -> Component.literal("Loop length is set to: " + TimeLoop.config.loopLengthTicks + " ticks"), false);
+                    return 1;
+                })
+                .then(Commands.argument("ticks", IntegerArgumentType.integer(20))
                         .executes(SettingsCommands::setLoopLength)));
 
-        settingsNode.then(CommandManager.literal("maxLoops")
-                .executes(context -> Commands.returnText(context, "Max loops is set to: " + TimeLoop.config.maxLoops))
-                .then(CommandManager.argument("ticks", IntegerArgumentType.integer(0))
+        settingsNode.then(Commands.literal("maxLoops")
+                .executes(context -> {
+                    context.getSource().sendSuccess(() -> Component.literal("Max loops is set to: " + TimeLoop.config.maxLoops), false);
+                    return 1;
+                })
+                .then(Commands.argument("value", IntegerArgumentType.integer(0))
                         .executes(SettingsCommands::maxLoops)));
 
-        settingsNode.then(CommandManager.literal("setTimeOfDay")
-                .executes(context -> Commands.returnText(context, "Time of day is set to: " + TimeLoop.config.timeSetting))
-                .then(CommandManager.argument("time", IntegerArgumentType.integer(0, 24000))
+        settingsNode.then(Commands.literal("setTimeOfDay")
+                .executes(context -> {
+                    context.getSource().sendSuccess(() -> Component.literal("Time of day is set to: " + TimeLoop.config.timeSetting), false);
+                    return 1;
+                })
+                .then(Commands.argument("time", IntegerArgumentType.integer(0, 24000))
                         .executes(SettingsCommands::setTimeOfDay)));
 
-        settingsNode.then(CommandManager.literal("modifyPlayer")
-                .then(CommandManager.argument("targetPlayer", StringArgumentType.string())
-                        .then(CommandManager.argument("nickname", StringArgumentType.string()) // Updated name
-                                .then(CommandManager.argument("skin", StringArgumentType.string()) // Updated skin
-                                        .executes(SettingsCommands::modifyPlayer))))); // Chained arguments
+        settingsNode.then(Commands.literal("modifyPlayer")
+                .then(Commands.argument("targetPlayer", StringArgumentType.string())
+                .then(Commands.argument("newName", StringArgumentType.string())
+                .then(Commands.argument("newSkin", StringArgumentType.string())
+                        .executes(SettingsCommands::modifyPlayer)))));
 
-
-        // --- Crucial Step: Call TogglesCommands to register its subcommands onto 'settingsNode' ---
         TogglesCommands.register(settingsNode);
-        // ---------------------------------------------------------------------------------------
 
-
-        // Add the fully built 'settings' node (including its 'toggles' child) to the main 'loop' builder
         parentBuilder.then(settingsNode);
     }
 
-    private static int setLoopType(CommandContext<ServerCommandSource> context) {
-        LoopTypes newLoopType = LoopTypes.valueOf(StringArgumentType.getString(context, "loopType"));
-        TimeLoop.loopType = newLoopType;
-        TimeLoop.config.loopType = newLoopType;
-        TimeLoop.config.save();
+    private static int setLoopType(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String loopTypeStr = StringArgumentType.getString(context, "loopType");
+        try {
+            LoopTypes newLoopType = LoopTypes.valueOf(loopTypeStr.toUpperCase());
+            TimeLoop.loopType = newLoopType;
+            TimeLoop.config.loopType = newLoopType;
+            TimeLoop.config.save();
 
-        // Hide BossBar when loopType is not Ticks or TimeOfDay
-        if (TimeLoop.showLoopInfo) {
-            TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
+            if (TimeLoop.showLoopInfo && TimeLoop.loopBossBar != null) {
+                TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
+            }
+
+            source.sendSuccess(() -> Component.literal("Looping type is set to: " + newLoopType), true);
+            LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop type set to {}", newLoopType);
+            return 1;
+        } catch (IllegalArgumentException e) {
+            source.sendFailure(Component.literal("Invalid loop type: " + loopTypeStr));
+            return 0;
         }
-
-        context.getSource().sendMessage(Text.literal("Looping type is set to: " + newLoopType));
-        Commands.LOOP_COMMANDS_LOGGER.info("Loop type set to {}", newLoopType);
-        return 1;
     }
 
-    private static int setLoopLength(CommandContext<ServerCommandSource> context) {
+    private static int setLoopLength(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         int newTicks = IntegerArgumentType.getInteger(context, "ticks");
         TimeLoop.loopLengthTicks = newTicks;
         TimeLoop.config.loopLengthTicks = newTicks;
@@ -80,37 +95,42 @@ public class SettingsCommands {
 
         TimeLoop.config.save();
 
-        context.getSource().sendMessage(Text.literal("Loop length is set to: " + newTicks + " ticks"));
-        Commands.LOOP_COMMANDS_LOGGER.info("Loop length set to {} ticks", newTicks);
+        source.sendSuccess(() -> Component.literal("Loop length is set to: " + newTicks + " ticks"), true);
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop length set to {} ticks", newTicks);
         return 1;
     }
 
-    private static int maxLoops(CommandContext<ServerCommandSource> context) {
+    private static int maxLoops(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         int maxLoops = IntegerArgumentType.getInteger(context, "value");
         TimeLoop.maxLoops = maxLoops;
         TimeLoop.config.maxLoops = maxLoops;
         TimeLoop.config.save();
-        context.getSource().sendMessage(Text.literal("Max loops is set to: " + maxLoops));
-        Commands.LOOP_COMMANDS_LOGGER.info("Max loops set to {}", maxLoops);
+        source.sendSuccess(() -> Component.literal("Max loops is set to: " + maxLoops), true);
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Max loops set to {}", maxLoops);
         return 1;
     }
 
-    private static int setTimeOfDay(CommandContext<ServerCommandSource> context) {
+    private static int setTimeOfDay(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         int newTime = IntegerArgumentType.getInteger(context, "time");
         TimeLoop.timeSetting = newTime;
         TimeLoop.config.timeSetting = newTime;
         TimeLoop.config.save();
-        context.getSource().sendMessage(Text.literal("Time of day is set to: " + newTime));
-        Commands.LOOP_COMMANDS_LOGGER.info("Time of day set to {}", newTime);
+        source.sendSuccess(() -> Component.literal("Time of day is set to: " + newTime), true);
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Time of day set to {}", newTime);
         return 1;
     }
 
-    private static int modifyPlayer(CommandContext<ServerCommandSource> context) {
+    private static int modifyPlayer(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
         String targetPlayer = StringArgumentType.getString(context, "targetPlayer");
         String newName = StringArgumentType.getString(context, "newName");
         String newSkin = StringArgumentType.getString(context, "newSkin");
-
+        
         TimeLoop.modifyPlayerAttributes(targetPlayer, newName, newSkin);
+        source.sendSuccess(() -> Component.literal("Attempted to modify player " + targetPlayer), true); // Generic success message
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Attempted to modify player {} with name {} and skin {}", targetPlayer, newName, newSkin);
         return 1;
     }
 }

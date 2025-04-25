@@ -4,26 +4,18 @@ import com.vltno.timeloop.LoopSceneManager;
 import com.vltno.timeloop.TimeLoopConfig;
 import net.minecraft.server.MinecraftServer;
 import com.vltno.timeloop.TimeLoop;
-import net.minecraft.util.WorldSavePath;
+import net.minecraft.world.level.storage.LevelResource;
 
 public class LifecycleEvent {
     public static void onServerStart(MinecraftServer server)
     {
-//        TimeLoop.server = server;
-//        
-//        // Load configuration from the config folder provided by FabricLoader
-//        TimeLoop.worldFolder = server.getSavePath(WorldSavePath.ROOT);
-//
-//        TimeLoop.config = TimeLoopConfig.load(TimeLoop.worldFolder);
-//        TimeLoop.loopSceneManager = new LoopSceneManager(TimeLoop.config);
-//        
-        // Load configuration from the config folder provided by FabricLoader
-        TimeLoop.worldFolder = server.getSavePath(WorldSavePath.ROOT);
+        // Load configuration from the config folder
+        TimeLoop.worldFolder = server.getWorldPath(LevelResource.ROOT);
         TimeLoop.config = TimeLoopConfig.load(TimeLoop.worldFolder);
 
         // Loop scene manager
         TimeLoop.loopSceneManager = new LoopSceneManager(TimeLoop.config);
-        
+
         TimeLoop.loopIteration = TimeLoop.config.loopIteration;
         TimeLoop.loopLengthTicks = TimeLoop.config.loopLengthTicks;
         TimeLoop.isLooping = TimeLoop.config.isLooping;
@@ -42,11 +34,13 @@ public class LifecycleEvent {
         TimeLoop.loopSceneManager.setRecordingPlayers(TimeLoop.config.recordingPlayers);
 
         TimeLoop.server = server;
-        TimeLoop.serverWorld = server.getOverworld();
-
-        TimeLoop.loopBossBar.visible(false);
-
-        // set mocap settings
+        
+        TimeLoop.serverLevel = server.overworld();
+        
+        if (TimeLoop.loopBossBar != null) {
+            TimeLoop.loopBossBar.visible(false);
+        }
+        
         TimeLoop.executeCommand("mocap settings advanced experimental_release_warning false");
         TimeLoop.executeCommand("mocap settings playback start_as_recorded true");
         TimeLoop.executeCommand("mocap settings recording assign_player_name true");
@@ -62,8 +56,8 @@ public class LifecycleEvent {
             TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
                 TimeLoop.executeCommand(String.format("mocap scenes add %s", playerSceneName));
             });
-        } catch (Error e) {
-            TimeLoop.LOOP_LOGGER.error("Failed to add player scenes to mocap scenes: {}", e.getMessage());
+        } catch (Exception e) {
+            TimeLoop.LOOP_LOGGER.error("Failed to add player scenes to mocap scenes: {}", e.getMessage(), e);
         }
     }
 
@@ -72,6 +66,16 @@ public class LifecycleEvent {
         if (TimeLoop.isLooping) {
             TimeLoop.stopLoop();
             TimeLoop.config.isLooping = true;
+            
+            if(TimeLoop.worldFolder != null) {
+                TimeLoop.config.save();
+            }
+        } else {
+            // Ensure config is saved even if not looping, might have pending changes
+            if(TimeLoop.worldFolder != null) {
+                TimeLoop.config.isLooping = false; // Ensure it saves as not looping
+                TimeLoop.config.save();
+            }
         }
     }
 }

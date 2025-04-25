@@ -27,8 +27,8 @@ public class TimeLoopFabric implements ModInitializer {
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             // Only register commands on the logical server
-            if (environment.dedicated || environment.integrated) {
-                Commands.register(dispatcher);
+            if (environment.includeDedicated || environment.includeIntegrated) {
+                LoopCommands.register(dispatcher);
             }
         });
 
