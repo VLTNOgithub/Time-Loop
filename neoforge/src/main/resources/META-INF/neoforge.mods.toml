@@ -1,33 +1,31 @@
-modLoader="javafml"
-loaderVersion="*"
-license="${license}"
-issueTrackerURL="${issue_tracker}"
+modLoader = "javafml"
+loaderVersion = "[4,)"
+#issueTrackerURL = ""
+license = "Insert License Here"
 
 [[mods]]
-modId="${mod_id}"
-version="${version}"
-displayName="${mod_name}"
-displayURL="${homepage}"
-logoFile="logo.png"
-authors="${mod_author}"
-description='''${mod_description}'''
+modId = "timeloop"
+version = "${version}"
+displayName = "Time Loop"
+authors = "Me!"
+description = '''
+This is an example description! Tell everyone what your mod is about!
+'''
+#logoFile = ""
+
+[[dependencies.timeloop]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.timeloop]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,)"
+ordering = "NONE"
+side = "BOTH"
 
 [[mixins]]
-config="${mod_id}.mixins.json"
-
-[[mixins]]
-config="${mod_id}.neoforge.mixins.json"
-
-[[dependencies.${mod_id}]]
-	modId="neoforge"
-	type="required"
-	versionRange="*"
-	ordering="NONE"
-	side="BOTH"
-
-[[dependencies.${mod_id}]]
-	modId="minecraft"
-	type="required"
-	versionRange="${version_range_neoforge}"
-	ordering="NONE"
-	side="BOTH"
+config = "timeloop.mixins.json"

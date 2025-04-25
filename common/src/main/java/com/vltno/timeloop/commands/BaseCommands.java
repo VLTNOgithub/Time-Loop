@@ -10,13 +10,21 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
 public class BaseCommands {
-    public static LiteralArgumentBuilder<ServerCommandSource> getArgumentBuilder(LiteralArgumentBuilder<ServerCommandSource> baseCommandBuilder)
-    {
-        baseCommandBuilder.then(CommandManager.literal("start").executes(BaseCommands::start)).requires(source -> source.hasPermissionLevel(2));
-        baseCommandBuilder.then(CommandManager.literal("stop").executes(BaseCommands::stop)).requires(source -> source.hasPermissionLevel(2));
-        baseCommandBuilder.then(CommandManager.literal("status").executes(BaseCommands::status));
-        
-        return baseCommandBuilder;
+    public static void register(LiteralArgumentBuilder<ServerCommandSource> parentBuilder) {
+        parentBuilder.then(CommandManager.literal("start")
+                .executes(BaseCommands::start)
+                .requires(source -> source.hasPermissionLevel(2)));
+
+        parentBuilder.then(CommandManager.literal("stop")
+                .executes(BaseCommands::stop)
+                .requires(source -> source.hasPermissionLevel(2)));
+
+        parentBuilder.then(CommandManager.literal("reset") // New command
+                .executes(BaseCommands::reset)
+                .requires(source -> source.hasPermissionLevel(2)));
+
+        parentBuilder.then(CommandManager.literal("status")
+                .executes(BaseCommands::status)); // No permission needed per layout
     }
     
     private static int start(CommandContext<ServerCommandSource> context) {
@@ -52,6 +60,40 @@ public class BaseCommands {
                 "Loop is inactive. Last iteration: " + TimeLoop.loopIteration + extras;
         context.getSource().sendMessage(Text.literal(status));
         Commands.LOOP_COMMANDS_LOGGER.info("Status requested: {}", status);
+        return 1;
+    }
+    
+    private static int reset(CommandContext<ServerCommandSource> context) {
+        TimeLoop.stopLoop();
+
+        TimeLoop.startTimeOfDay = 0;
+        TimeLoop.config.startTimeOfDay = 0;
+
+        TimeLoop.timeSetting = 13000;
+        TimeLoop.config.timeSetting = 0;
+
+        TimeLoop.ticksLeft = TimeLoop.loopLengthTicks;
+        TimeLoop.config.ticksLeft = TimeLoop.config.loopLengthTicks;
+
+        TimeLoop.trackItems = false;
+        TimeLoop.config.trackItems = false;
+
+        TimeLoop.loopType = LoopTypes.TICKS;
+        TimeLoop.config.loopType = LoopTypes.TICKS;
+
+        TimeLoop.displayTimeInTicks = false;
+        TimeLoop.config.displayTimeInTicks = false;
+
+        TimeLoop.executeCommand("mocap playback stop_all");
+        TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
+            TimeLoop.executeCommand(String.format("mocap scenes remove %s", playerSceneName));
+            TimeLoop.executeCommand(String.format("mocap scenes add %s", playerSceneName));
+        });
+
+        TimeLoop.loopIteration = 0;
+        TimeLoop.config.loopIteration = 0;
+        TimeLoop.config.save();
+        context.getSource().sendMessage(Text.literal("Loop reset!"));
         return 1;
     }
 }

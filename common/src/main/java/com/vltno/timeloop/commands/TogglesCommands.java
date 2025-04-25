@@ -11,35 +11,35 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
 public class TogglesCommands {
-    public static LiteralArgumentBuilder<ServerCommandSource> getArgumentBuilder()
+    public static void register(LiteralArgumentBuilder<ServerCommandSource> settingsCommandBuilder)
     {
-        LiteralArgumentBuilder<ServerCommandSource> commandBuilder = CommandManager.literal("settings");
-
-        commandBuilder.then(CommandManager.literal("trackTimeOfDay")).executes(context -> Commands.returnText(context, "Track time of day is set to: " + TimeLoop.trackTimeOfDay))
+        LiteralArgumentBuilder<ServerCommandSource> togglesNode = CommandManager.literal("toggles");
+        
+        togglesNode.then(CommandManager.literal("trackTimeOfDay").executes(context -> Commands.returnText(context, "Track time of day is set to: " + TimeLoop.trackTimeOfDay))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
-                        .executes(TogglesCommands::trackTimeOfDay));
+                        .executes(TogglesCommands::trackTimeOfDay)));
 
-        commandBuilder.then(CommandManager.literal("trackItems")).executes(context -> Commands.returnText(context, "Track items is set to: " + TimeLoop.trackItems))
+        togglesNode.then(CommandManager.literal("trackItems").executes(context -> Commands.returnText(context, "Track items is set to: " + TimeLoop.trackItems))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
-                        .executes(TogglesCommands::trackItems));
+                        .executes(TogglesCommands::trackItems)));
 
-        commandBuilder.then(CommandManager.literal("displayTimeInTicks")).executes(context -> Commands.returnText(context, "Display time in ticks is set to: " + TimeLoop.displayTimeInTicks))
+        togglesNode.then(CommandManager.literal("displayTimeInTicks").executes(context -> Commands.returnText(context, "Display time in ticks is set to: " + TimeLoop.displayTimeInTicks))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
-                        .executes(TogglesCommands::displayTimeInTicks));
+                        .executes(TogglesCommands::displayTimeInTicks)));
 
-        commandBuilder.then(CommandManager.literal("showLoopInfo")).executes(context -> Commands.returnText(context, "Show loop info is set to: " + TimeLoop.showLoopInfo))
+        togglesNode.then(CommandManager.literal("showLoopInfo").executes(context -> Commands.returnText(context, "Show loop info is set to: " + TimeLoop.showLoopInfo))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
-                        .executes(TogglesCommands::showLoopInfo));
+                        .executes(TogglesCommands::showLoopInfo)));
 
-        commandBuilder.then(CommandManager.literal("trackChat")).executes(context -> Commands.returnText(context, "Tracking chat is set to: " + TimeLoop.trackChat))
+        togglesNode.then(CommandManager.literal("trackChat").executes(context -> Commands.returnText(context, "Tracking chat is set to: " + TimeLoop.trackChat))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
-                        .executes(TogglesCommands::trackChat));
+                        .executes(TogglesCommands::trackChat)));
 
-        commandBuilder.then(CommandManager.literal("hurtLoopedPlayers")).executes(context -> Commands.returnText(context, "Hurting looped players is set to: " + TimeLoop.hurtLoopedPlayers))
+        togglesNode.then(CommandManager.literal("hurtLoopedPlayers").executes(context -> Commands.returnText(context, "Hurting looped players is set to: " + TimeLoop.hurtLoopedPlayers))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
-                        .executes(TogglesCommands::hurtLoopedPlayers));
-
-        return commandBuilder;
+                        .executes(TogglesCommands::hurtLoopedPlayers)));
+        
+        settingsCommandBuilder.then(togglesNode);
     }
 
     private static int trackTimeOfDay(CommandContext<ServerCommandSource> context) {

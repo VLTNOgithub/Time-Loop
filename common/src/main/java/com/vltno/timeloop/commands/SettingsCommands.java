@@ -13,29 +13,45 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
 public class SettingsCommands {
-    public static LiteralArgumentBuilder<ServerCommandSource> getArgumentBuilder()
-    {
-        LiteralArgumentBuilder<ServerCommandSource> commandBuilder = CommandManager.literal("settings");
+
+    public static void register(LiteralArgumentBuilder<ServerCommandSource> parentBuilder) {
+        LiteralArgumentBuilder<ServerCommandSource> settingsNode = CommandManager.literal("settings")
+                .requires(source -> source.hasPermissionLevel(2)); // Permission for all settings
+
+        settingsNode.then(CommandManager.literal("setLoopType").executes(context -> Commands.returnText(context, "Loop type is set to: " + TimeLoop.loopType))
+                .then(CommandManager.argument("loopType", StringArgumentType.word())
+                        .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder))
+                        .executes(SettingsCommands::setLoopType)));
         
-        commandBuilder.then(CommandManager.literal("setLoopType")).executes(context -> Commands.returnText(context, "Loop type is set to: " + TimeLoop.loopType))
-                .then(CommandManager.argument("loopType", StringArgumentType.word()).suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder))
-                        .executes(SettingsCommands::setLoopType));
-        
-        commandBuilder.then(CommandManager.literal("setLength")).executes(context -> Commands.returnText(context, "Loop length is set to: " + TimeLoop.loopLengthTicks + " ticks"))
+        settingsNode.then(CommandManager.literal("setLength")
+                .executes(context -> Commands.returnText(context, "Loop length is set to: " + TimeLoop.config.loopLengthTicks + " ticks"))
                 .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
-                        .executes(SettingsCommands::setLoopLength));
+                        .executes(SettingsCommands::setLoopLength)));
         
-        commandBuilder.then(CommandManager.literal("setTimeOfDay")).executes(context -> Commands.returnText(context, "Time of day is set to: " + TimeLoop.timeSetting))
+        settingsNode.then(CommandManager.literal("maxLoops")
+                .executes(context -> Commands.returnText(context, "Max loops is set to: " + TimeLoop.config.maxLoops))
+                .then(CommandManager.argument("ticks", IntegerArgumentType.integer(0))
+                        .executes(SettingsCommands::maxLoops)));
+
+        settingsNode.then(CommandManager.literal("setTimeOfDay")
+                .executes(context -> Commands.returnText(context, "Time of day is set to: " + TimeLoop.config.timeSetting))
                 .then(CommandManager.argument("time", IntegerArgumentType.integer(0, 24000))
-                        .executes(SettingsCommands::setTimeOfDay));
-        
-        commandBuilder.then(CommandManager.literal("modifyPlayer"))
+                        .executes(SettingsCommands::setTimeOfDay)));
+
+        settingsNode.then(CommandManager.literal("modifyPlayer")
                 .then(CommandManager.argument("targetPlayer", StringArgumentType.string())
-                .then(CommandManager.argument("newName", StringArgumentType.string())
-                .then(CommandManager.argument("newSkin", StringArgumentType.string())
-                        .executes(SettingsCommands::modifyPlayer))));
-        
-        return commandBuilder;
+                .then(CommandManager.argument("nickname", StringArgumentType.string()) // Updated name
+                .then(CommandManager.argument("skin", StringArgumentType.string()) // Updated skin
+                        .executes(SettingsCommands::modifyPlayer))))); // Chained arguments
+
+
+        // --- Crucial Step: Call TogglesCommands to register its subcommands onto 'settingsNode' ---
+        TogglesCommands.register(settingsNode);
+        // ---------------------------------------------------------------------------------------
+
+
+        // Add the fully built 'settings' node (including its 'toggles' child) to the main 'loop' builder
+        parentBuilder.then(settingsNode);
     }
     
     private static int setLoopType(CommandContext<ServerCommandSource> context) {
@@ -66,6 +82,16 @@ public class SettingsCommands {
 
         context.getSource().sendMessage(Text.literal("Loop length is set to: " + newTicks + " ticks"));
         Commands.LOOP_COMMANDS_LOGGER.info("Loop length set to {} ticks", newTicks);
+        return 1;
+    }
+    
+    private static int maxLoops(CommandContext<ServerCommandSource> context) {
+        int maxLoops = IntegerArgumentType.getInteger(context, "value");
+        TimeLoop.maxLoops = maxLoops;
+        TimeLoop.config.maxLoops = maxLoops;
+        TimeLoop.config.save();
+        context.getSource().sendMessage(Text.literal("Max loops is set to: " + maxLoops));
+        Commands.LOOP_COMMANDS_LOGGER.info("Max loops set to {}", maxLoops);
         return 1;
     }
     

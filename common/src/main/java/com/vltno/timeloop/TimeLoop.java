@@ -50,11 +50,8 @@ public class TimeLoop {
 
 	public static boolean isDedicatedServer;
 
-	public static TimeLoopLoaderInterface loaderInterface;
-
-	public static void init(boolean isDedicatedServer, TimeLoopLoaderInterface loaderInterface) {
+	public static void init(boolean isDedicatedServer) {
 		TimeLoop.isDedicatedServer = isDedicatedServer;
-		TimeLoop.loaderInterface = loaderInterface;
 
 		loopBossBar = new LoopBossBar();
 		

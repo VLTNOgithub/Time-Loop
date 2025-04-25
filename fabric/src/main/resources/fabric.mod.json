@@ -19,10 +19,10 @@
 		]
 	},
 	"depends": {
-		"minecraft": "${version_range_fabric}",
+		"minecraft": "${minecraft_version}",
 		"fabricloader": ">=${fabric_loader_version}",
 		"fabric-api": "*",
 		"mocap": "${mod_mocap_version}",
-		"java": ">=${java_version}"
+		"java": ">=21"
 	}
 }

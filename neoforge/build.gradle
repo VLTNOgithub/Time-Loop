@@ -1,31 +1,56 @@
-plugins
-{
-	id "net.neoforged.moddev" version "${neoforge_moddev_version}"
-	id "architectury-plugin" version "3.4-SNAPSHOT"
-	id "dev.architectury.loom" version "1.7-SNAPSHOT" apply false
+plugins {
+    id 'com.github.johnrengelman.shadow'
 }
 
 architectury {
-	common("neoforge")
+    platformSetupLoomIde()
+    neoForge()
 }
 
-neoForge
-{
-	version = neoforge_version
-	parchment
-	{
-		minecraftVersion = parchment_minecraft
-		mappingsVersion = parchment_version
-	}
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentNeoForge.extendsFrom common
 
-	runs
-	{
-		client { client() }
-		server { server() }
-	}
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
 
-	mods
-	{
-		"${mod_id}" { sourceSet sourceSets.main }
-	}
+repositories {
+    maven {
+        name = 'NeoForged'
+        url = 'https://maven.neoforged.net/releases'
+    }
+}
+
+dependencies {
+    neoForge "net.neoforged:neoforge:$rootProject.neoforge_version"
+
+    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
+    shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand version: project.version
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    inputFile.set shadowJar.archiveFile
 }
