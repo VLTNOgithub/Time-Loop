@@ -22,6 +22,7 @@ Simply use commands to configure the loop.
  - **settings**
    - `setLoopType [TICK]` - Sets the type of loop.
    - `setLength [6000]` - Set the duration / length of the loop in ticks (6000 ticks is 5 mins).
+   - `maxLoops [0]` - Set the maximum amount of loops. 0 is infinite.
    - `setTimeOfDay [13000]` - Sets the time of day to loop at (same as minecraft so 13000 is night).
    - `modifyPlayer [target_player] [nickname] [skin]` - Changes a looped player's nickname and skin.
    - **toggles**
