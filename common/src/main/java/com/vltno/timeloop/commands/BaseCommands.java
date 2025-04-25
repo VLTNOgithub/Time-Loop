@@ -71,7 +71,7 @@ public class BaseCommands {
             LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop skipped");
             return 1;
         }
-        source.sendFailure(Component.literal("Loop already running!"));
+        source.sendFailure(Component.literal("Loop not running"));
         return 0;
     }
 
