@@ -1,7 +1,7 @@
 task openBuildDirFabric {
     doLast {
         if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
-            def buildDir = file("${project.projectDir}/neoforge/build/libs").absolutePath
+            def buildDir = file("${project.projectDir}/fabric/build/libs").absolutePath
             def command = ['explorer', buildDir]
             new ProcessBuilder(command).start()
         } else {
@@ -26,7 +26,7 @@ subprojects {
     apply plugin: 'java'
 
     base {
-        archivesName = "${archives_name}-${project.name.toUpperCase()}-${minecraft_version}"
+        archivesName = "${archives_name}-${project.name.toLowerCase()}-${minecraft_version}"
     }
 
     processResources {
