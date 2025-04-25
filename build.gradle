@@ -1,7 +1,7 @@
 task openBuildDirFabric {
     doLast {
-        def buildDir = file("D:/ProgrammingProjects/TimeLoop/fabric/build/libs").absolutePath
         if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+            def buildDir = file("${project.projectDir}/fabric/build/libs").absolutePath
             def command = ['explorer', buildDir]
             new ProcessBuilder(command).start()
         } else {
@@ -12,8 +12,8 @@ task openBuildDirFabric {
 
 task openBuildDirNeoForge {
     doLast {
-        def buildDir = file("D:/ProgrammingProjects/TimeLoop/neoforge/build/libs").absolutePath
         if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+            def buildDir = file("${project.projectDir}/neoforge/build/libs").absolutePath
             def command = ['explorer', buildDir]
             new ProcessBuilder(command).start()
         } else {
@@ -26,7 +26,7 @@ subprojects {
     apply plugin: 'java'
 
     base {
-        archivesName = "${archives_name}-${project.name.toUpperCase()}-${minecraft_version}"
+        archivesName = "${archives_name}-${project.name.toLowerCase()}-${minecraft_version}"
     }
 
     processResources {
@@ -48,8 +48,7 @@ subprojects {
                         "archives_name"                         : archives_name,
 
                         "minecraft_version"                     : minecraft_version,
-                        "yarn_mappings"                         : yarn_mappings,
-                        
+
                         "fabric_loader_version"                 : fabric_loader_version,
                         "fabric_api_version"                    : fabric_api_version,
                         "neoforge_version"                      : neoforge_version,
@@ -64,7 +63,7 @@ subprojects {
     jar {
         exclude "assets/time-loop/icon.psd"
     }
-    
+
     if (project.name == "fabric") {
         tasks.named("jar") {
             finalizedBy rootProject.tasks.named("openBuildDirFabric")
@@ -74,7 +73,7 @@ subprojects {
             finalizedBy rootProject.tasks.named("openBuildDirNeoForge")
         }
     }
-    
+
     if (project.name in ["fabric", "neoforge"]) {
         dependencies
                 {
