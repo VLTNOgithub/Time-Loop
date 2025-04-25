@@ -1,0 +1,31 @@
+plugins
+{
+	id "net.neoforged.moddev" version "${neoforge_moddev_version}"
+	id "architectury-plugin" version "3.4-SNAPSHOT"
+	id "dev.architectury.loom" version "1.7-SNAPSHOT" apply false
+}
+
+architectury {
+	common("neoforge")
+}
+
+neoForge
+{
+	version = neoforge_version
+	parchment
+	{
+		minecraftVersion = parchment_minecraft
+		mappingsVersion = parchment_version
+	}
+
+	runs
+	{
+		client { client() }
+		server { server() }
+	}
+
+	mods
+	{
+		"${mod_id}" { sourceSet sourceSets.main }
+	}
+}

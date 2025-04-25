@@ -1,4 +1,17 @@
+plugins {
+	id "architectury-plugin" version "3.4-SNAPSHOT"
+	id "dev.architectury.loom" version "1.7-SNAPSHOT" apply false
+}
+
+architectury {
+	minecraft = project.minecraft_version
+}
+
 subprojects {
+	apply plugin: "java"
+	apply plugin: "dev.architectury.loom"
+	apply plugin: "architectury-plugin"
+	
 	task openBuildDir {
 		doLast {
 			def buildDir = file("${layout.buildDirectory.get().asFile.absolutePath}/libs").absolutePath
@@ -11,7 +24,7 @@ subprojects {
 		}
 	}
 
-	apply plugin: "java"
+	
 	java.toolchain.languageVersion = JavaLanguageVersion.of(java_version)
 	
 	base {
@@ -45,7 +58,7 @@ subprojects {
 				"neoforge_version"          : neoforge_version,
 			]
 
-		filesMatching(["pack.mcmeta", "fabric.mod.json", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "*.mixins.json"]) {
+		filesMatching(["pack.mcmeta", "fabric.mod.json", "META-INF/neoforge.mods.toml", "*.mixins.json"]) {
 			expand replaceProperties
 		}
 		inputs.properties replaceProperties

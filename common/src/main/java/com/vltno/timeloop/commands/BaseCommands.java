@@ -20,10 +20,10 @@ public class BaseCommands {
     }
     
     private static int start(CommandContext<ServerCommandSource> context) {
-        if (!Commands.mod.isLooping) {
-            Commands.mod.startTimeOfDay = Commands.mod.serverWorld.getTimeOfDay();
-            TimeLoop.config.startTimeOfDay = Commands.mod.startTimeOfDay;
-            Commands.mod.startLoop();
+        if (!TimeLoop.isLooping) {
+            TimeLoop.startTimeOfDay = TimeLoop.serverWorld.getTimeOfDay();
+            TimeLoop.config.startTimeOfDay = TimeLoop.startTimeOfDay;
+            TimeLoop.startLoop();
             context.getSource().sendMessage(Text.literal("Loop started!"));
             Commands.LOOP_COMMANDS_LOGGER.info("loop started");
             return 1;
@@ -33,8 +33,8 @@ public class BaseCommands {
     }
     
     private static int stop(CommandContext<ServerCommandSource> context) {
-        if (Commands.mod.isLooping) {
-            Commands.mod.stopLoop();
+        if (TimeLoop.isLooping) {
+            TimeLoop.stopLoop();
             context.getSource().sendMessage(Text.literal("Loop stopped"));
             Commands.LOOP_COMMANDS_LOGGER.info("Loop stopped");
             return 1;
@@ -46,10 +46,10 @@ public class BaseCommands {
     }
     
     private static int status(CommandContext<ServerCommandSource> context) {
-        String extras = " Looping on " + Commands.mod.loopType + "." + (Commands.mod.isLooping && Commands.mod.loopType == LoopTypes.TICKS ? " Ticks Left: " + Commands.mod.ticksLeft : "") + (Commands.mod.trackItems ? " Tracking items." : "");
-        String status = Commands.mod.isLooping ?
-                "Loop is active. Current iteration: " + Commands.mod.loopIteration + extras:
-                "Loop is inactive. Last iteration: " + Commands.mod.loopIteration + extras;
+        String extras = " Looping on " + TimeLoop.loopType + "." + (TimeLoop.isLooping && TimeLoop.loopType == LoopTypes.TICKS ? " Ticks Left: " + TimeLoop.ticksLeft : "") + (TimeLoop.trackItems ? " Tracking items." : "");
+        String status = TimeLoop.isLooping ?
+                "Loop is active. Current iteration: " + TimeLoop.loopIteration + extras:
+                "Loop is inactive. Last iteration: " + TimeLoop.loopIteration + extras;
         context.getSource().sendMessage(Text.literal(status));
         Commands.LOOP_COMMANDS_LOGGER.info("Status requested: {}", status);
         return 1;

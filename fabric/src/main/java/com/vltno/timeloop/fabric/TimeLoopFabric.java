@@ -22,17 +22,6 @@ import java.util.Optional;
 
 public class TimeLoopFabric extends TimeLoop implements ModInitializer, TimeLoopLoaderInterface {
     public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
-    private Commands commands;
-    private static MinecraftServer server;
-    public ServerWorld serverWorld;
-
-    public LoopBossBar loopBossBar;
-
-    // The configuration object loaded from disk
-    public TimeLoopConfig config;
-
-    // Get the world folder path for config/recording loading
-    private Path worldFolder;
 
     public static final boolean isDedicatedServer = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
     

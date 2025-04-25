@@ -15,27 +15,27 @@ public class TogglesCommands {
     {
         LiteralArgumentBuilder<ServerCommandSource> commandBuilder = CommandManager.literal("settings");
 
-        commandBuilder.then(CommandManager.literal("trackTimeOfDay")).executes(context -> Commands.returnText(context, "Track time of day is set to: " + Commands.mod.trackTimeOfDay))
+        commandBuilder.then(CommandManager.literal("trackTimeOfDay")).executes(context -> Commands.returnText(context, "Track time of day is set to: " + TimeLoop.trackTimeOfDay))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::trackTimeOfDay));
 
-        commandBuilder.then(CommandManager.literal("trackItems")).executes(context -> Commands.returnText(context, "Track items is set to: " + Commands.mod.trackItems))
+        commandBuilder.then(CommandManager.literal("trackItems")).executes(context -> Commands.returnText(context, "Track items is set to: " + TimeLoop.trackItems))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::trackItems));
 
-        commandBuilder.then(CommandManager.literal("displayTimeInTicks")).executes(context -> Commands.returnText(context, "Display time in ticks is set to: " + Commands.mod.displayTimeInTicks))
+        commandBuilder.then(CommandManager.literal("displayTimeInTicks")).executes(context -> Commands.returnText(context, "Display time in ticks is set to: " + TimeLoop.displayTimeInTicks))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::displayTimeInTicks));
 
-        commandBuilder.then(CommandManager.literal("showLoopInfo")).executes(context -> Commands.returnText(context, "Show loop info is set to: " + Commands.mod.showLoopInfo))
+        commandBuilder.then(CommandManager.literal("showLoopInfo")).executes(context -> Commands.returnText(context, "Show loop info is set to: " + TimeLoop.showLoopInfo))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::showLoopInfo));
 
-        commandBuilder.then(CommandManager.literal("trackChat")).executes(context -> Commands.returnText(context, "Tracking chat is set to: " + Commands.mod.trackChat))
+        commandBuilder.then(CommandManager.literal("trackChat")).executes(context -> Commands.returnText(context, "Tracking chat is set to: " + TimeLoop.trackChat))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::trackChat));
 
-        commandBuilder.then(CommandManager.literal("hurtLoopedPlayers")).executes(context -> Commands.returnText(context, "Hurting looped players is set to: " + Commands.mod.hurtLoopedPlayers))
+        commandBuilder.then(CommandManager.literal("hurtLoopedPlayers")).executes(context -> Commands.returnText(context, "Hurting looped players is set to: " + TimeLoop.hurtLoopedPlayers))
                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::hurtLoopedPlayers));
 
@@ -44,7 +44,7 @@ public class TogglesCommands {
 
     private static int trackTimeOfDay(CommandContext<ServerCommandSource> context) {
         boolean newTrackTimeOfDay = BoolArgumentType.getBool(context, "value");
-        Commands.mod.trackTimeOfDay = newTrackTimeOfDay;
+        TimeLoop.trackTimeOfDay = newTrackTimeOfDay;
         TimeLoop.config.trackTimeOfDay = newTrackTimeOfDay;
         TimeLoop.config.save();
 
@@ -55,11 +55,11 @@ public class TogglesCommands {
 
     private static int trackItems(CommandContext<ServerCommandSource> context) {
         boolean newTrackItems = BoolArgumentType.getBool(context, "value");
-        Commands.mod.trackItems = newTrackItems;
+        TimeLoop.trackItems = newTrackItems;
         TimeLoop.config.trackItems = newTrackItems;
         TimeLoop.config.save();
 
-        Commands.mod.updateEntitiesToTrack(newTrackItems);
+        TimeLoop.updateEntitiesToTrack(newTrackItems);
 
         context.getSource().sendMessage(Text.literal("Track items is set to: " + newTrackItems));
         Commands.LOOP_COMMANDS_LOGGER.info("Track items set to {}", newTrackItems);
@@ -68,7 +68,7 @@ public class TogglesCommands {
 
     private static int displayTimeInTicks(CommandContext<ServerCommandSource> context) {
         boolean newDisplayTimeInTicks = BoolArgumentType.getBool(context, "value");
-        Commands.mod.displayTimeInTicks = newDisplayTimeInTicks;
+        TimeLoop.displayTimeInTicks = newDisplayTimeInTicks;
         TimeLoop.config.displayTimeInTicks = newDisplayTimeInTicks;
         TimeLoop.config.save();
 
@@ -79,12 +79,12 @@ public class TogglesCommands {
     
     private static int showLoopInfo(CommandContext<ServerCommandSource> context) {
         boolean newShowLoopInfo = BoolArgumentType.getBool(context, "value");
-        Commands.mod.showLoopInfo = newShowLoopInfo;
+        TimeLoop.showLoopInfo = newShowLoopInfo;
         TimeLoop.config.showLoopInfo = newShowLoopInfo;
         TimeLoop.config.save();
 
         if (newShowLoopInfo) {
-            TimeLoop.loopBossBar.visible(Commands.mod.loopType.equals(LoopTypes.TICKS) || Commands.mod.loopType.equals(LoopTypes.TIME_OF_DAY));
+            TimeLoop.loopBossBar.visible(TimeLoop.loopType.equals(LoopTypes.TICKS) || TimeLoop.loopType.equals(LoopTypes.TIME_OF_DAY));
         }
 
         context.getSource().sendMessage(Text.literal("Showing loop info is set to: " + newShowLoopInfo));
@@ -94,7 +94,7 @@ public class TogglesCommands {
     
     private static int trackChat(CommandContext<ServerCommandSource> context) {
         boolean newTrackChat = BoolArgumentType.getBool(context, "value");
-        Commands.mod.trackChat = newTrackChat;
+        TimeLoop.trackChat = newTrackChat;
         TimeLoop.config.trackChat = newTrackChat;
         TimeLoop.config.save();
 
@@ -107,7 +107,7 @@ public class TogglesCommands {
     
     private static int hurtLoopedPlayers(CommandContext<ServerCommandSource> context) {
         boolean newHurtLoopedPlayers = BoolArgumentType.getBool(context, "value");
-        Commands.mod.hurtLoopedPlayers = newHurtLoopedPlayers;
+        TimeLoop.hurtLoopedPlayers = newHurtLoopedPlayers;
         TimeLoop.config.hurtLoopedPlayers = newHurtLoopedPlayers;
         TimeLoop.config.save();
 

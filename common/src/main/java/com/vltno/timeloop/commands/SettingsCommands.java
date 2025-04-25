@@ -17,15 +17,15 @@ public class SettingsCommands {
     {
         LiteralArgumentBuilder<ServerCommandSource> commandBuilder = CommandManager.literal("settings");
         
-        commandBuilder.then(CommandManager.literal("setLoopType")).executes(context -> Commands.returnText(context, "Loop type is set to: " + Commands.mod.loopType))
+        commandBuilder.then(CommandManager.literal("setLoopType")).executes(context -> Commands.returnText(context, "Loop type is set to: " + TimeLoop.loopType))
                 .then(CommandManager.argument("loopType", StringArgumentType.word()).suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder))
                         .executes(SettingsCommands::setLoopType));
         
-        commandBuilder.then(CommandManager.literal("setLength")).executes(context -> Commands.returnText(context, "Loop length is set to: " + Commands.mod.loopLengthTicks + " ticks"))
+        commandBuilder.then(CommandManager.literal("setLength")).executes(context -> Commands.returnText(context, "Loop length is set to: " + TimeLoop.loopLengthTicks + " ticks"))
                 .then(CommandManager.argument("ticks", IntegerArgumentType.integer(20))
                         .executes(SettingsCommands::setLoopLength));
         
-        commandBuilder.then(CommandManager.literal("setTimeOfDay")).executes(context -> Commands.returnText(context, "Time of day is set to: " + Commands.mod.timeSetting))
+        commandBuilder.then(CommandManager.literal("setTimeOfDay")).executes(context -> Commands.returnText(context, "Time of day is set to: " + TimeLoop.timeSetting))
                 .then(CommandManager.argument("time", IntegerArgumentType.integer(0, 24000))
                         .executes(SettingsCommands::setTimeOfDay));
         
@@ -40,12 +40,12 @@ public class SettingsCommands {
     
     private static int setLoopType(CommandContext<ServerCommandSource> context) {
         LoopTypes newLoopType = LoopTypes.valueOf(StringArgumentType.getString(context, "loopType"));
-        Commands.mod.loopType = newLoopType;
+        TimeLoop.loopType = newLoopType;
         TimeLoop.config.loopType = newLoopType;
         TimeLoop.config.save();
 
         // Hide BossBar when loopType is not Ticks or TimeOfDay
-        if (Commands.mod.showLoopInfo) {
+        if (TimeLoop.showLoopInfo) {
             TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
         }
 
@@ -56,10 +56,10 @@ public class SettingsCommands {
     
     private static int setLoopLength(CommandContext<ServerCommandSource> context) {
         int newTicks = IntegerArgumentType.getInteger(context, "ticks");
-        Commands.mod.loopLengthTicks = newTicks;
+        TimeLoop.loopLengthTicks = newTicks;
         TimeLoop.config.loopLengthTicks = newTicks;
 
-        Commands.mod.ticksLeft = newTicks;
+        TimeLoop.ticksLeft = newTicks;
         TimeLoop.config.ticksLeft = newTicks;
 
         TimeLoop.config.save();
@@ -71,7 +71,7 @@ public class SettingsCommands {
     
     private static int setTimeOfDay(CommandContext<ServerCommandSource> context) {
         int newTime = IntegerArgumentType.getInteger(context, "time");
-        Commands.mod.timeSetting = newTime;
+        TimeLoop.timeSetting = newTime;
         TimeLoop.config.timeSetting = newTime;
         TimeLoop.config.save();
         context.getSource().sendMessage(Text.literal("Time of day is set to: " + newTime));
@@ -84,7 +84,7 @@ public class SettingsCommands {
         String newName = StringArgumentType.getString(context, "newName");
         String newSkin = StringArgumentType.getString(context, "newSkin");
 
-        Commands.mod.modifyPlayerAttributes(targetPlayer, newName, newSkin);
+        TimeLoop.modifyPlayerAttributes(targetPlayer, newName, newSkin);
         return 1;
     }
 }

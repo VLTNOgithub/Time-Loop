@@ -107,7 +107,7 @@ public class TimeLoop {
 	/**
 	 * Starts and initialises the loop.
 	 */
-	public void startLoop() {
+	public static void startLoop() {
 		if (isLooping) {
 			LOOP_LOGGER.info("Attempted to start already running recording loop");
 			return;
@@ -192,7 +192,7 @@ public class TimeLoop {
 		return exists;
 	}
 
-	public void modifyPlayerAttributes(String targetPlayerName, String newPlayerNickname, String newSkin) {
+	public static void modifyPlayerAttributes(String targetPlayerName, String newPlayerNickname, String newSkin) {
 		String playerSceneName = loopSceneManager.getPlayerSceneName(targetPlayerName);
 		executeCommand(String.format("mocap scenes modify .%s %s player_skin skin_from_player %s", playerSceneName, newPlayerNickname, newSkin));
 
