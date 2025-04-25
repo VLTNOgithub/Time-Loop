@@ -1,25 +1,10 @@
-plugins
-        {
-            id "fabric-loom" version "${fabric_loom_version}"
-        }
+architectury {
+    common rootProject.enabled_platforms.split(',')
+}
 
-repositories
-        {
-            maven { url = "https://maven.parchmentmc.org/" }
-            maven { url = "https://repo.spongepowered.org/repository/maven-public" }
-        }
-
-dependencies
-        {
-            minecraft "com.mojang:minecraft:${minecraft_version}"
-            mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-            
-            compileOnly "org.spongepowered:mixin:0.8.5:processor"
-            
-            implementation "com.google.code.gson:gson:2.13.1"
-        }
-
-loom
-        {
-            mixin.useLegacyMixinAp = false
-        }
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+}
