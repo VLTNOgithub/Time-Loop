@@ -1,6 +1,18 @@
-task openBuildDir {
+task openBuildDirFabric {
     doLast {
-        def buildDir = file("${layout.buildDirectory.get().asFile.absolutePath}/libs").absolutePath
+        def buildDir = file("D:/ProgrammingProjects/TimeLoop/fabric/build/libs").absolutePath
+        if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+            def command = ['explorer', buildDir]
+            new ProcessBuilder(command).start()
+        } else {
+            println "Skipping openBuildDir task as it is not running on Windows."
+        }
+    }
+}
+
+task openBuildDirNeoForge {
+    doLast {
+        def buildDir = file("D:/ProgrammingProjects/TimeLoop/neoforge/build/libs").absolutePath
         if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
             def command = ['explorer', buildDir]
             new ProcessBuilder(command).start()
@@ -52,11 +64,25 @@ subprojects {
     jar {
         exclude "assets/time-loop/icon.psd"
     }
-
-    if (project.name in ["fabric", "neoforge"]) {
+    
+    if (project.name == "fabric") {
         tasks.named("jar") {
-            finalizedBy rootProject.tasks.named("openBuildDir")
+            finalizedBy rootProject.tasks.named("openBuildDirFabric")
         }
+    } else if (project.name == "neoforge") {
+        tasks.named("jar") {
+            finalizedBy rootProject.tasks.named("openBuildDirNeoForge")
+        }
+    }
+    
+    if (project.name in ["fabric", "neoforge"]) {
+        dependencies
+                {
+                    compileOnly project(":common")
+                }
+
+        processResources { from project(":common").sourceSets.main.resources }
+        tasks.named("compileJava", JavaCompile) { source project(":common").sourceSets.main.allSource }
     }
 
     java {

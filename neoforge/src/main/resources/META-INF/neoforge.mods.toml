@@ -1,31 +1,34 @@
-modLoader = "javafml"
-loaderVersion = "[4,)"
-#issueTrackerURL = ""
-license = "Insert License Here"
+modLoader="javafml"
+loaderVersion="*"
+license="${mod_license}"
+issueTrackerURL="${mod_issues}"
 
 [[mods]]
-modId = "timeloop"
-version = "${version}"
-displayName = "Time Loop"
-authors = "Me!"
-description = '''
-This is an example description! Tell everyone what your mod is about!
-'''
-#logoFile = ""
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+displayURL="${mod_homepage}"
+logoFile="logo.png"
+authors="${mod_author_1}, ${mod_author_2}"
+description='''${mod_description}'''
 
-[[dependencies.timeloop]]
-modId = "neoforge"
-type = "required"
-versionRange = "[21.1,)"
-ordering = "NONE"
-side = "BOTH"
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="*"
+ordering="NONE"
+side="BOTH"
 
-[[dependencies.timeloop]]
-modId = "minecraft"
-type = "required"
-versionRange = "[1.21.1,)"
-ordering = "NONE"
-side = "BOTH"
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version}"
+ordering="NONE"
+side="BOTH"
 
-[[mixins]]
-config = "timeloop.mixins.json"
+[[dependencies.${mod_id}]]
+modId="mocap"
+type="required"
+versionRange="${mod_mocap_version}"
+ordering="NONE"
+side="BOTH"

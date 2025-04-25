@@ -1,4 +1,4 @@
-package com.vltno.timeloop.neoforge; // Changed package
+package com.vltno.timeloop.neoforge;
 
 import com.vltno.timeloop.LoopCommands;
 import com.vltno.timeloop.TimeLoop;
@@ -28,14 +28,10 @@ public class TimeLoopNeoForge {
     
     public static final boolean isLogicalServer = !FMLEnvironment.dist.isClient();
 
-    public TimeLoopNeoForge(IEventBus modEventBus) { // NeoForge uses constructor injection for mod bus
+    public TimeLoopNeoForge(IEventBus modEventBus) {
         LOOP_LOGGER.info("Initializing TimeLoop mod (NeoForge)");
-
-        // Pass the logical server status to common init
+        
         TimeLoop.init(isLogicalServer);
-
-        // Register command registration listener to the MOD event bus
-        modEventBus.addListener(this::registerCommands);
 
         // Register gameplay event listeners to the NeoForge EVENT bus
         NeoForge.EVENT_BUS.register(this);
@@ -44,6 +40,7 @@ public class TimeLoopNeoForge {
     }
 
     // Command registration handler
+    @SubscribeEvent
     public void registerCommands(RegisterCommandsEvent event) {
         LOOP_LOGGER.info("Registering TimeLoop commands (NeoForge)");
         LoopCommands.register(event.getDispatcher());
