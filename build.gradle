@@ -1,7 +1,7 @@
 task openBuildDirFabric {
     doLast {
-        def buildDir = file("${project.projectDir}/fabric/build/libs").absolutePath
         if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+            def buildDir = file("${project.projectDir}/neoforge/build/libs").absolutePath
             def command = ['explorer', buildDir]
             new ProcessBuilder(command).start()
         } else {
@@ -12,8 +12,8 @@ task openBuildDirFabric {
 
 task openBuildDirNeoForge {
     doLast {
-        def buildDir = file("${project.projectDir}/neoforge/build/libs").absolutePath
         if (System.properties['os.name'].toString().toLowerCase().contains('windows')) {
+            def buildDir = file("${project.projectDir}/neoforge/build/libs").absolutePath
             def command = ['explorer', buildDir]
             new ProcessBuilder(command).start()
         } else {
