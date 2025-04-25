@@ -7,7 +7,8 @@ public enum LoopTypes implements StringRepresentable {
     TICKS,
     TIME_OF_DAY,
     SLEEP,
-    DEATH;
+    DEATH,
+    MANUAL;
 
     @Override
     public @NotNull String getSerializedName() {

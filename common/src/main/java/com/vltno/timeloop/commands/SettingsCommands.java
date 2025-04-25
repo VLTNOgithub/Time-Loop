@@ -24,7 +24,7 @@ public class SettingsCommands {
                     return 1;
                 })
                 .then(Commands.argument("loopType", StringArgumentType.word())
-                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH"}, builder))
+                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(new String[]{"TICKS", "TIME_OF_DAY", "SLEEP", "DEATH", "MANUAL"}, builder))
                         .executes(SettingsCommands::setLoopType)));
 
         settingsNode.then(Commands.literal("setLength")
@@ -75,7 +75,8 @@ public class SettingsCommands {
                 TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
             }
 
-            source.sendSuccess(() -> Component.literal("Looping type is set to: " + newLoopType), true);
+            String extra = (newLoopType == LoopTypes.MANUAL) ? ". Use '/loop skip' to advance to the next iteration." : "";
+            source.sendSuccess(() -> Component.literal("Loop type is set to: " + newLoopType + extra), true);
             LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop type set to {}", newLoopType);
             return 1;
         } catch (IllegalArgumentException e) {
