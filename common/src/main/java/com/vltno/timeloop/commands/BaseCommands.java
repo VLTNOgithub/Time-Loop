@@ -20,6 +20,10 @@ public class BaseCommands {
         parentBuilder.then(Commands.literal("start")
                 .executes(BaseCommands::start)
                 .requires(source -> source.hasPermission(2)));
+        
+        parentBuilder.then(Commands.literal("skip")
+                .executes(BaseCommands::skip)
+                .requires(source -> source.hasPermission(2)));
 
         parentBuilder.then(Commands.literal("stop")
                 .executes(BaseCommands::stop)
@@ -46,7 +50,25 @@ public class BaseCommands {
             TimeLoop.startLoop();
             
             source.sendSuccess(() -> Component.literal("Loop started!"), true);
-            LoopCommands.LOOP_COMMANDS_LOGGER.info("loop started");
+            LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop started");
+            return 1;
+        }
+        source.sendFailure(Component.literal("Loop already running!"));
+        return 0;
+    }
+
+    private static int skip(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        if (TimeLoop.isLooping) {
+            if (TimeLoop.serverLevel == null) {
+                source.sendFailure(Component.literal("Error: Server world not available yet."));
+                return 0;
+            }
+            
+            TimeLoop.runLoopIteration();
+            
+            source.sendSuccess(() -> Component.literal("Loop skipped!"), true);
+            LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop skipped");
             return 1;
         }
         source.sendFailure(Component.literal("Loop already running!"));
