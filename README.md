@@ -43,6 +43,7 @@ Simply use commands to configure the loop.
         - `hurtLoopedPlayers [false]` - Toggles being able to hit looped players.
 
 # Loop Types
+- `MANUAL` (Only loops when you use the `skip` command. AKA does nothing.)
 - `TICK` (Loops every `setLength` ticks)
 - `TIME_OF_DAY` (Loops when the time reaches `setTimeOfDay`)
 - `SLEEP` (Loops when you sleep)
