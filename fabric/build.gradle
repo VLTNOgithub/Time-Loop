@@ -25,7 +25,6 @@ dependencies {
         parchment("org.parchmentmc.data:parchment-${minecraft_version}:${parchment_version}@zip")
     }
 
-
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     

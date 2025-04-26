@@ -26,6 +26,10 @@ public class BaseCommands {
                 .executes(BaseCommands::skip)
                 .requires(source -> source.hasPermission(2)));
 
+        parentBuilder.then(Commands.literal("skip")
+                .executes(BaseCommands::skip)
+                .requires(source -> source.hasPermission(2)));
+        
         parentBuilder.then(Commands.literal("stop")
                 .executes(BaseCommands::stop)
                 .requires(source -> source.hasPermission(2)));
@@ -67,7 +71,7 @@ public class BaseCommands {
             }
             
             TimeLoop.runLoopIteration();
-            
+          
             source.sendSuccess(() -> Component.literal("Loop skipped!"), true);
             LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop skipped");
             return 1;

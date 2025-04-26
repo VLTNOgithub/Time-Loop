@@ -84,7 +84,7 @@ public class SettingsCommands {
             if (TimeLoop.showLoopInfo && TimeLoop.loopBossBar != null) {
                 TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
             }
-            
+          
             String extra = (newLoopType == LoopTypes.MANUAL) ? ". Use '/loop skip' to advance to the next iteration." : "";
             source.sendSuccess(() -> Component.literal("Loop type is set to: " + newLoopType + extra), true);
             LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop type set to {}", newLoopType);
