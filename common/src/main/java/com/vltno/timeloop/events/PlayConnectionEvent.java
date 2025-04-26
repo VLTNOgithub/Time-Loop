@@ -1,20 +1,22 @@
 package com.vltno.timeloop.events;
 
 import com.vltno.timeloop.LoopTypes;
+import com.vltno.timeloop.RewindTypes;
 import com.vltno.timeloop.TimeLoop;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.chat.Component;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 public class PlayConnectionEvent {
     public static void onJoin(ServerGamePacketListenerImpl handler, MinecraftServer server) {
         ServerPlayer player = handler.player;
         String playerName = player.getName().getString();
-
-        TimeLoop.loopSceneManager.addPlayer(Collections.singletonList(playerName));
+        
+        TimeLoop.loopSceneManager.addPlayer(Arrays.asList(playerName, null, null, player.position().toString()));
+        
         if (TimeLoop.loopBossBar != null) {
             TimeLoop.loopBossBar.addPlayer(player);
         }
@@ -36,6 +38,7 @@ public class PlayConnectionEvent {
         if (TimeLoop.isLooping) {
             TimeLoop.LOOP_LOGGER.info("Starting recording for newly joined player: {}", playerName);
             TimeLoop.executeCommand(String.format("mocap recording start %s", playerName));
+            
             if (TimeLoop.showLoopInfo && TimeLoop.loopBossBar != null) {
                 
                 boolean shouldBeVisible = TimeLoop.loopType != null && (TimeLoop.loopType.equals(LoopTypes.TICKS) || TimeLoop.loopType.equals(LoopTypes.TIME_OF_DAY));

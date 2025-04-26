@@ -1,5 +1,7 @@
 package com.vltno.timeloop;
 
+import net.minecraft.world.phys.Vec3;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,8 +12,6 @@ public class LoopSceneManager {
     private TimeLoopConfig config;
     private String scenePrefix;
     private Map<String, PlayerData> recordingPlayers;
-    
-    
 
     // Constructor to initialize recordingPlayers map
     public LoopSceneManager(TimeLoopConfig config) {
@@ -23,18 +23,46 @@ public class LoopSceneManager {
     // Method to add a player to the recordingPlayers map
     public void addPlayer(List<String> args) {
         String playerName = args.get(0);
-        List<String> nickname = args.size() > 1 ? args.subList(1, args.size()) : null;
-        List<String> skin = args.size() > 2 ? args.subList(2, args.size()) : null;
         
-        if (playerName != null && !playerName.isEmpty()) {
-            String tempNickname = (nickname == null || nickname.isEmpty()) ? playerName : nickname.getFirst();
-            String tempSkin = (skin == null || skin.isEmpty()) ? playerName : skin.getFirst();
-            
-            // Use player name as the key and store a PlayerData object
-            recordingPlayers.put(playerName, new PlayerData(playerName, tempNickname, tempSkin));
-        } else {
-            System.out.println("Invalid player data. Player not added.");
+        String nickname = args.size() > 1 ? args.get(1) : null;
+        String skin = args.size() > 2 ? args.get(2) : null;
+        String rewindPosition = args.size() > 3 ? args.get(3) : null;
+        
+        if (playerName == null || playerName.isEmpty()) {
+            TimeLoop.LOOP_LOGGER.error("Player name is null or empty. Skipping player addition.");
+            return;
         }
+
+        String tempNickname = (nickname == null || nickname.isEmpty()) ? playerName : nickname;
+        String tempSkin = (skin == null || skin.isEmpty()) ? playerName : skin;
+        
+        Vec3 tempRewindPosition = Vec3.ZERO;
+        
+        if (rewindPosition != null && !rewindPosition.isEmpty()) {
+            try {
+                String processedString = rewindPosition.trim();
+                
+                if ((processedString.startsWith("(") && processedString.endsWith(")")) ||
+                        (processedString.startsWith("[") && processedString.endsWith("]"))) {
+                    processedString = processedString.substring(1, processedString.length() - 1).trim();
+                }
+                
+                String[] positionParts = processedString.split("\\s*,\\s*");
+                
+                if (positionParts.length == 3) {
+                    double x = Double.parseDouble(positionParts[0]);
+                    double y = Double.parseDouble(positionParts[1]);
+                    double z = Double.parseDouble(positionParts[2]);
+                    tempRewindPosition = new Vec3(x, y, z);
+                }
+            } catch (NumberFormatException e) {
+                TimeLoop.LOOP_LOGGER.error("Invalid rewind position format. Skipping rewind position.");
+            }
+        }
+        
+        PlayerData playerData = new PlayerData(playerName, tempNickname, tempSkin, tempRewindPosition);
+        
+        recordingPlayers.put(playerName, playerData);
     }
 
 
@@ -43,12 +71,12 @@ public class LoopSceneManager {
         if (playerName != null && !playerName.isEmpty()) {
             PlayerData removed = recordingPlayers.remove(playerName);
             if (removed != null) {
-                System.out.println("Player '" + playerName + "' removed successfully.");
+                TimeLoop.LOOP_LOGGER.info("Player '" + playerName + "' removed successfully.");
             } else {
-                System.out.println("Player '" + playerName + "' not found in the list.");
+                TimeLoop.LOOP_LOGGER.info("Player '" + playerName + "' not found in the list.");
             }
         } else {
-            System.out.println("Invalid player name. Player not removed.");
+            TimeLoop.LOOP_LOGGER.info("Invalid player name. Player not removed.");
         }
     }
 

@@ -14,11 +14,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class TimeLoopFabric implements ModInitializer {
     public static final Logger LOOP_LOGGER = LoggerFactory.getLogger("TimeLoop");
-
     public static final boolean isDedicatedServer = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
-
+    
     @Override
     public void onInitialize() {
         LOOP_LOGGER.info("Initializing TimeLoop mod (Fabric)");
@@ -48,4 +48,5 @@ public class TimeLoopFabric implements ModInitializer {
 
         LOOP_LOGGER.info("TimeLoop mod initialized successfully (Fabric)");
     }
+    
 }

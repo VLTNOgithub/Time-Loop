@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.vltno.timeloop.LoopCommands;
 import com.vltno.timeloop.LoopTypes;
 import com.vltno.timeloop.TimeLoop;
+import com.vltno.timeloop.TimeLoopConfig;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
@@ -19,6 +20,10 @@ public class BaseCommands {
 
         parentBuilder.then(Commands.literal("start")
                 .executes(BaseCommands::start)
+                .requires(source -> source.hasPermission(2)));
+        
+        parentBuilder.then(Commands.literal("skip")
+                .executes(BaseCommands::skip)
                 .requires(source -> source.hasPermission(2)));
 
         parentBuilder.then(Commands.literal("skip")
@@ -64,9 +69,9 @@ public class BaseCommands {
                 source.sendFailure(Component.literal("Error: Server world not available yet."));
                 return 0;
             }
-
+            
             TimeLoop.runLoopIteration();
-
+          
             source.sendSuccess(() -> Component.literal("Loop skipped!"), true);
             LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop skipped");
             return 1;
@@ -110,24 +115,26 @@ public class BaseCommands {
         CommandSourceStack source = context.getSource();
         TimeLoop.stopLoop();
 
-        // Reset logic remains the same internally
-        TimeLoop.startTimeOfDay = 0;
-        TimeLoop.config.startTimeOfDay = 0;
+        // Reset logic
+        TimeLoopConfig baseConfig = new TimeLoopConfig();
+        
+        TimeLoop.startTimeOfDay = baseConfig.startTimeOfDay;
+        TimeLoop.config.startTimeOfDay = baseConfig.startTimeOfDay;
 
-        TimeLoop.timeSetting = 13000;
-        TimeLoop.config.timeSetting = 13000;
+        TimeLoop.timeSetting = baseConfig.timeSetting;
+        TimeLoop.config.timeSetting = baseConfig.timeSetting;
 
         TimeLoop.ticksLeft = TimeLoop.loopLengthTicks;
         TimeLoop.config.ticksLeft = TimeLoop.config.loopLengthTicks;
 
-        TimeLoop.trackItems = false;
-        TimeLoop.config.trackItems = false;
+        TimeLoop.trackItems = baseConfig.trackItems;
+        TimeLoop.config.trackItems = baseConfig.trackItems;
 
-        TimeLoop.loopType = LoopTypes.TICKS;
-        TimeLoop.config.loopType = LoopTypes.TICKS;
+        TimeLoop.loopType = baseConfig.loopType;
+        TimeLoop.config.loopType = baseConfig.loopType;
 
-        TimeLoop.displayTimeInTicks = false;
-        TimeLoop.config.displayTimeInTicks = false;
+        TimeLoop.displayTimeInTicks = baseConfig.displayTimeInTicks;
+        TimeLoop.config.displayTimeInTicks = baseConfig.displayTimeInTicks;
         
         TimeLoop.executeCommand("mocap playback stop_all");
         TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {

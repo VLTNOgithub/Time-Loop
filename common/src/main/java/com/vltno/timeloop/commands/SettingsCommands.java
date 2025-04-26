@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.vltno.timeloop.LoopCommands;
 import com.vltno.timeloop.LoopTypes;
+import com.vltno.timeloop.RewindTypes;
 import com.vltno.timeloop.TimeLoop;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
@@ -56,7 +57,16 @@ public class SettingsCommands {
                 .then(Commands.argument("newName", StringArgumentType.string())
                 .then(Commands.argument("newSkin", StringArgumentType.string())
                         .executes(SettingsCommands::modifyPlayer)))));
-
+        
+        settingsNode.then(Commands.literal("setRewindType")
+                .executes(context -> {
+                    context.getSource().sendSuccess(() -> Component.literal("Rewind type is set to: " + TimeLoop.rewindType), false);
+                    return 1;
+                })
+                .then(Commands.argument("rewindType", StringArgumentType.word())
+                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(new String[]{"NONE", "START_POSITION", "JOIN_POSITION"}, builder))
+                        .executes(SettingsCommands::setRewindType)));
+        
         TogglesCommands.register(settingsNode);
 
         parentBuilder.then(settingsNode);
@@ -74,7 +84,7 @@ public class SettingsCommands {
             if (TimeLoop.showLoopInfo && TimeLoop.loopBossBar != null) {
                 TimeLoop.loopBossBar.visible(newLoopType.equals(LoopTypes.TICKS) || newLoopType.equals(LoopTypes.TIME_OF_DAY));
             }
-
+          
             String extra = (newLoopType == LoopTypes.MANUAL) ? ". Use '/loop skip' to advance to the next iteration." : "";
             source.sendSuccess(() -> Component.literal("Loop type is set to: " + newLoopType + extra), true);
             LoopCommands.LOOP_COMMANDS_LOGGER.info("Loop type set to {}", newLoopType);
@@ -133,5 +143,24 @@ public class SettingsCommands {
         source.sendSuccess(() -> Component.literal("Attempted to modify player " + targetPlayer), true); // Generic success message
         LoopCommands.LOOP_COMMANDS_LOGGER.info("Attempted to modify player {} with name {} and skin {}", targetPlayer, newName, newSkin);
         return 1;
+    }
+
+
+    private static int setRewindType(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String rewindTypeStr = StringArgumentType.getString(context, "rewindType");
+        try {
+            RewindTypes newRewindType = RewindTypes.valueOf(rewindTypeStr.toUpperCase());
+            TimeLoop.rewindType = newRewindType;
+            TimeLoop.config.rewindType = newRewindType;
+            TimeLoop.config.save();
+
+            source.sendSuccess(() -> Component.literal("Rewinding position is set to: " + newRewindType), true);
+            LoopCommands.LOOP_COMMANDS_LOGGER.info("Rewind position set to {}", newRewindType);
+            return 1;
+        } catch (IllegalArgumentException e) {
+            source.sendFailure(Component.literal("Invalid rewind type: " + rewindTypeStr));
+            return 0;
+        }
     }
 }

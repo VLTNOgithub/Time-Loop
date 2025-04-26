@@ -12,10 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TimeLoopConfig {
-    // These values will be loaded/saved from/to the JSON config file.bossbar set minecraft:loop_info
     public String scenePrefix = "loop_scene";
     public boolean firstStart = true;
-    public int loopIteration = 1;
+    public int loopIteration = 0;
     public boolean isLooping = false;
     public int loopLengthTicks = 6000; // Default: 6000 ticks (i.e. 5 minutes)
     public int maxLoops = 0; // No limit by default
@@ -30,6 +29,7 @@ public class TimeLoopConfig {
     public LoopTypes loopType = LoopTypes.TICKS;
     public boolean trackChat = false;
     public boolean hurtLoopedPlayers = false;
+    public RewindTypes rewindType = RewindTypes.NONE;
 
     public Map<String, PlayerData> recordingPlayers = new HashMap<>();
 
@@ -41,7 +41,7 @@ public class TimeLoopConfig {
      * If the file does not exist, a default config is created and saved.
      *
      * @param configDir the config directory (usually obtained from FabricLoader)
-     * @return an instance of LoopConfig
+     * @return an instance of TimeLoopConfig
      */
     public static TimeLoopConfig load(Path configDir) {
         configPath = configDir.resolve("timeloop.json");
