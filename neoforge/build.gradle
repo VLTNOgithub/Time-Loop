@@ -32,3 +32,7 @@ dependencies {
     api project(":common")
     implementation "maven.modrinth:motion-capture:${mod_mocap_version}-neoforge-${minecraft_version}"
 }
+
+jar {
+    exclude "icon.psd"
+}

@@ -24,3 +24,7 @@ loom {
     mixin.useLegacyMixinAp = false
     officialMojangMappings()
 }
+
+jar {
+    exclude "icon.psd"
+}

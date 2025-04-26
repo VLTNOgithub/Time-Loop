@@ -8,6 +8,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,7 @@ public class TimeLoop {
 	public static LoopTypes loopType;
 	public static boolean trackChat;
 	public static boolean hurtLoopedPlayers;
+	public static RewindTypes rewindType;
 
 	// The configuration object loaded from disk
 	public static TimeLoopConfig config;
@@ -104,7 +107,29 @@ public class TimeLoop {
 			String playerName = playerData.getName();
 			String playerNickname = playerData.getNickname();
 			String playerSkin = playerData.getSkin();
-
+			Vec3 startPosition = playerData.getStartPosition();
+			Vec3 joinPosition = playerData.getJoinPosition();
+			
+			Player player = server.getPlayerList().getPlayerByName(playerName);
+			
+			switch (rewindType) {
+				case START_POSITION -> {
+					if (startPosition == null) {
+						LOOP_LOGGER.error("Player {} has no start position yet. Defaulting to join position.", playerName);
+						player.teleportTo(joinPosition.x, joinPosition.y, joinPosition.z);
+						return;
+					}
+					player.teleportTo(startPosition.x, startPosition.y, startPosition.z);
+				}
+				case JOIN_POSITION -> {
+					if (joinPosition == null) {
+						LOOP_LOGGER.error("Player {} has no join position yet. (somehow??)", playerName);
+						return;
+					}
+					player.teleportTo(joinPosition.x, joinPosition.y, joinPosition.z);
+				}
+			}
+			
 			String playerSceneName = loopSceneManager.getPlayerSceneName(playerName);
 			TimeLoop.executeCommand(String.format("mocap playback start .%s %s skin_from_player %s", playerSceneName, playerNickname, playerSkin));
 		});
@@ -126,7 +151,11 @@ public class TimeLoop {
 		if (showLoopInfo) {
 			loopBossBar.visible(loopType.equals(LoopTypes.TICKS) || loopType.equals(LoopTypes.TIME_OF_DAY));
 		}
-
+		
+		loopSceneManager.forEachRecordingPlayer(playerData -> {
+			playerData.setStartPosition(server.getPlayerList().getPlayerByName(playerData.getName()).position());
+		});
+		
 		isLooping = true;
 		config.isLooping = true;
 		tickCounter = 0;

@@ -30,6 +30,7 @@ public class LifecycleEvent {
         TimeLoop.loopType = TimeLoop.config.loopType;
         TimeLoop.trackChat = TimeLoop.config.trackChat;
         TimeLoop.hurtLoopedPlayers = TimeLoop.config.hurtLoopedPlayers;
+        TimeLoop.rewindType = TimeLoop.config.rewindType;
 
         TimeLoop.loopSceneManager.setRecordingPlayers(TimeLoop.config.recordingPlayers);
 

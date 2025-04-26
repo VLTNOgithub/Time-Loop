@@ -60,10 +60,6 @@ subprojects {
         inputs.properties replaceProperties
     }
 
-    jar {
-        exclude "assets/time-loop/icon.psd"
-    }
-
     if (project.name == "fabric") {
         tasks.named("jar") {
             finalizedBy rootProject.tasks.named("openBuildDirFabric")

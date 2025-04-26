@@ -49,7 +49,7 @@ public class TogglesCommands {
 
         togglesNode.then(Commands.literal("trackChat")
                 .executes(context -> {
-                    context.getSource().sendSuccess(() -> Component.literal("Tracking chat is set to: " + TimeLoop.trackChat), false);
+                    context.getSource().sendSuccess(() -> Component.literal("Track chat is set to: " + TimeLoop.trackChat), false);
                     return 1;
                 })
                 .then(Commands.argument("value", BoolArgumentType.bool())
@@ -57,7 +57,7 @@ public class TogglesCommands {
 
         togglesNode.then(Commands.literal("hurtLoopedPlayers")
                 .executes(context -> {
-                    context.getSource().sendSuccess(() -> Component.literal("Hurting looped players is set to: " + TimeLoop.hurtLoopedPlayers), false);
+                    context.getSource().sendSuccess(() -> Component.literal("Hurt looped players is set to: " + TimeLoop.hurtLoopedPlayers), false);
                     return 1;
                 })
                 .then(Commands.argument("value", BoolArgumentType.bool())
@@ -119,7 +119,7 @@ public class TogglesCommands {
             }
         }
 
-        source.sendSuccess(() -> Component.literal("Showing loop info is set to: " + newShowLoopInfo), true);
+        source.sendSuccess(() -> Component.literal("Show loop info is set to: " + newShowLoopInfo), true);
         LoopCommands.LOOP_COMMANDS_LOGGER.info("Show loop info set to {}", newShowLoopInfo);
         return 1;
     }
@@ -133,8 +133,8 @@ public class TogglesCommands {
 
         TimeLoop.executeCommand("mocap settings recording chat_recording " + newTrackChat);
 
-        source.sendSuccess(() -> Component.literal("Tracking chat is set to: " + newTrackChat), true);
-        LoopCommands.LOOP_COMMANDS_LOGGER.info("Tracking chat set to {}", newTrackChat);
+        source.sendSuccess(() -> Component.literal("Track chat is set to: " + newTrackChat), true);
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Track chat set to {}", newTrackChat);
         return 1;
     }
 
@@ -147,8 +147,8 @@ public class TogglesCommands {
 
         TimeLoop.executeCommand("mocap settings playback invulnerable_playback " + !newHurtLoopedPlayers);
 
-        source.sendSuccess(() -> Component.literal("Hurting looped players is set to: " + newHurtLoopedPlayers), true);
-        LoopCommands.LOOP_COMMANDS_LOGGER.info("Hurting looped players set to {}", newHurtLoopedPlayers);
+        source.sendSuccess(() -> Component.literal("Hurt looped players is set to: " + newHurtLoopedPlayers), true);
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Hurt looped players set to {}", newHurtLoopedPlayers);
         return 1;
     }
 }
