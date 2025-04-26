@@ -51,7 +51,7 @@ Simply use commands to configure the loop.
 
 # Rewind Types
 - `NONE` (Doesn't rewind)
-- `START_POSITION` (Rewinds players to their position at the start of the loop)
+- `START_POSITION` (Rewinds players to their position when the loop started)
 - `JOIN_POSITION` (Rewinds players to their position when they joined)
 
 # Known Issues
