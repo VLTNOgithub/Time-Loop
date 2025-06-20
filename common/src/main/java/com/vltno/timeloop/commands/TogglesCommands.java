@@ -8,7 +8,10 @@ import com.vltno.timeloop.LoopTypes;
 import com.vltno.timeloop.TimeLoop;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 
 public class TogglesCommands {
     public static void register(LiteralArgumentBuilder<CommandSourceStack> settingsCommandBuilder)
@@ -30,6 +33,14 @@ public class TogglesCommands {
                 })
                 .then(Commands.argument("value", BoolArgumentType.bool())
                         .executes(TogglesCommands::trackItems)));
+
+        togglesNode.then(Commands.literal("trackInventory")
+                .executes(context -> {
+                    context.getSource().sendSuccess(() -> Component.literal("Track inventory is set to: " + TimeLoop.trackInventory), false);
+                    return 1;
+                })
+                .then(Commands.argument("value", BoolArgumentType.bool())
+                        .executes(TogglesCommands::trackInventory)));
 
         togglesNode.then(Commands.literal("displayTimeInTicks")
                 .executes(context -> {
@@ -89,6 +100,28 @@ public class TogglesCommands {
 
         source.sendSuccess(() -> Component.literal("Track items is set to: " + newTrackItems), true);
         LoopCommands.LOOP_COMMANDS_LOGGER.info("Track items set to {}", newTrackItems);
+        return 1;
+    }
+
+    private static int trackInventory(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        boolean newTrackInventory = BoolArgumentType.getBool(context, "value");
+        TimeLoop.trackInventory = newTrackInventory;
+        TimeLoop.config.trackInventory = newTrackInventory;
+        TimeLoop.config.save();
+
+        TimeLoop.loopSceneManager.forEachRecordingPlayer(playerData -> {
+            String playerName = playerData.getName();
+            Player player = TimeLoop.server.getPlayerList().getPlayerByName(playerName);
+
+            HolderLookup.Provider provider = TimeLoop.server.registryAccess();
+
+            CompoundTag invTag = TimeLoop.saveFullInventory(player, provider);
+            playerData.setInventoryTag(invTag);
+        });
+
+        source.sendSuccess(() -> Component.literal("Track inventory is set to: " + newTrackInventory), true);
+        LoopCommands.LOOP_COMMANDS_LOGGER.info("Track inventory set to {}", newTrackInventory);
         return 1;
     }
 
