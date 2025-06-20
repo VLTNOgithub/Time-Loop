@@ -6,9 +6,13 @@ import com.google.gson.JsonParser;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +48,7 @@ public class TimeLoop {
 	public static boolean trackChat;
 	public static boolean hurtLoopedPlayers;
 	public static RewindTypes rewindType;
+	public static boolean trackInventory;
 
 	// The configuration object loaded from disk
 	public static TimeLoopConfig config;
@@ -109,9 +114,15 @@ public class TimeLoop {
 			String playerSkin = playerData.getSkin();
 			Vec3 startPosition = playerData.getStartPosition();
 			Vec3 joinPosition = playerData.getJoinPosition();
+			CompoundTag inventoryTag = playerData.getInventoryTag();
 			
 			Player player = server.getPlayerList().getPlayerByName(playerName);
-			
+			HolderLookup.Provider provider = server.registryAccess();
+
+			if (trackInventory) {
+				loadFullInventory(player, inventoryTag, provider);
+			}
+
 			switch (rewindType) {
 				case START_POSITION -> {
 					if (startPosition == null) {
@@ -153,7 +164,15 @@ public class TimeLoop {
 		}
 		
 		loopSceneManager.forEachRecordingPlayer(playerData -> {
-			playerData.setStartPosition(server.getPlayerList().getPlayerByName(playerData.getName()).position());
+			String playerName = playerData.getName();
+			Player player = server.getPlayerList().getPlayerByName(playerName);
+
+			HolderLookup.Provider provider = server.registryAccess();
+
+			CompoundTag invTag = saveFullInventory(player, provider);
+    		playerData.setInventoryTag(invTag);
+
+			playerData.setStartPosition(server.getPlayerList().getPlayerByName(playerName).position());
 		});
 		
 		isLooping = true;
@@ -331,5 +350,55 @@ public class TimeLoop {
 		int minutes = (timeLeft % 3600) / 60;
 		int seconds = timeLeft % 60;
 		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+	}
+
+	public static CompoundTag saveFullInventory(Player player, HolderLookup.Provider provider) {
+		CompoundTag tag = new CompoundTag();
+
+		// Main inventory
+		ListTag main = new ListTag();
+		for (ItemStack stack : player.getInventory().items) {
+			main.add(stack.isEmpty() ? new CompoundTag() : stack.save(provider, new CompoundTag()));
+		}
+		tag.put("main", main);
+
+		// Armor
+		ListTag armor = new ListTag();
+		for (ItemStack stack : player.getInventory().armor) {
+			armor.add(stack.isEmpty() ? new CompoundTag() : stack.save(provider, new CompoundTag()));
+		}
+		tag.put("armor", armor);
+
+		// Offhand
+		ListTag offhand = new ListTag();
+		for (ItemStack stack : player.getInventory().offhand) {
+			offhand.add(stack.isEmpty() ? new CompoundTag() : stack.save(provider, new CompoundTag()));
+		}
+		tag.put("offhand", offhand);
+
+		return tag;
+	}
+
+	public static void loadFullInventory(Player player, CompoundTag tag, HolderLookup.Provider provider) {
+		// Main inventory
+		ListTag main = tag.getList("main", 10);
+		for (int i = 0; i < player.getInventory().items.size(); i++) {
+			CompoundTag itemTag = i < main.size() ? main.getCompound(i) : new CompoundTag();
+			player.getInventory().items.set(i, itemTag.isEmpty() ? ItemStack.EMPTY : ItemStack.parseOptional(provider, itemTag));
+		}
+
+		// Armor
+		ListTag armor = tag.getList("armor", 10);
+		for (int i = 0; i < player.getInventory().armor.size(); i++) {
+			CompoundTag itemTag = i < armor.size() ? armor.getCompound(i) : new CompoundTag();
+			player.getInventory().armor.set(i, itemTag.isEmpty() ? ItemStack.EMPTY : ItemStack.parseOptional(provider, itemTag));
+		}
+
+		// Offhand
+		ListTag offhand = tag.getList("offhand", 10);
+		for (int i = 0; i < player.getInventory().offhand.size(); i++) {
+			CompoundTag itemTag = i < offhand.size() ? offhand.getCompound(i) : new CompoundTag();
+			player.getInventory().offhand.set(i, itemTag.isEmpty() ? ItemStack.EMPTY : ItemStack.parseOptional(provider, itemTag));
+		}
 	}
 }

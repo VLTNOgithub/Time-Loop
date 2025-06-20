@@ -1,8 +1,9 @@
 package com.vltno.timeloop.events;
 
 import com.vltno.timeloop.LoopTypes;
-import com.vltno.timeloop.RewindTypes;
 import com.vltno.timeloop.TimeLoop;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,8 +15,12 @@ public class PlayConnectionEvent {
     public static void onJoin(ServerGamePacketListenerImpl handler, MinecraftServer server) {
         ServerPlayer player = handler.player;
         String playerName = player.getName().getString();
-        
-        TimeLoop.loopSceneManager.addPlayer(Arrays.asList(playerName, null, null, player.position().toString()));
+        HolderLookup.Provider provider = server.registryAccess();
+
+        TimeLoop.loopSceneManager.addPlayer(Arrays.asList(playerName, null, null, player.position().toString(), new CompoundTag().toString()));
+
+        CompoundTag invTag = TimeLoop.saveFullInventory(player, provider);
+        TimeLoop.loopSceneManager.getRecordingPlayer(playerName).setInventoryTag(invTag);
         
         if (TimeLoop.loopBossBar != null) {
             TimeLoop.loopBossBar.addPlayer(player);

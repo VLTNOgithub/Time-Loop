@@ -30,6 +30,7 @@ public class TimeLoopConfig {
     public boolean trackChat = false;
     public boolean hurtLoopedPlayers = false;
     public RewindTypes rewindType = RewindTypes.NONE;
+    public boolean trackInventory = false;
 
     public Map<String, PlayerData> recordingPlayers = new HashMap<>();
 
@@ -62,7 +63,7 @@ public class TimeLoopConfig {
         }
 
         // Validate recordingPlayers field and provide defaults if necessary
-        if (config.recordingPlayers == null || !(config.recordingPlayers instanceof Map)) {
+        if (!(config.recordingPlayers instanceof Map)) {
             System.err.println("Invalid or missing recordingPlayers data in config. Initializing with an empty map.");
             config.recordingPlayers = new HashMap<>();
         }

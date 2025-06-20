@@ -31,6 +31,7 @@ public class LifecycleEvent {
         TimeLoop.trackChat = TimeLoop.config.trackChat;
         TimeLoop.hurtLoopedPlayers = TimeLoop.config.hurtLoopedPlayers;
         TimeLoop.rewindType = TimeLoop.config.rewindType;
+        TimeLoop.trackInventory = TimeLoop.config.trackInventory;
 
         TimeLoop.loopSceneManager.setRecordingPlayers(TimeLoop.config.recordingPlayers);
 
@@ -54,9 +55,7 @@ public class LifecycleEvent {
         TimeLoop.updateEntitiesToTrack(TimeLoop.trackItems);
 
         try {
-            TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> {
-                TimeLoop.executeCommand(String.format("mocap scenes add %s", playerSceneName));
-            });
+            TimeLoop.loopSceneManager.forEachPlayerSceneName(playerSceneName -> TimeLoop.executeCommand(String.format("mocap scenes add %s", playerSceneName)));
         } catch (Exception e) {
             TimeLoop.LOOP_LOGGER.error("Failed to add player scenes to mocap scenes: {}", e.getMessage(), e);
         }
